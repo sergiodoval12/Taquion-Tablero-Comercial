@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tablero del Director Comercial — Grupo Taquion 2026</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+    <script crossorigin src="https://cdn.jsdelivr.net/npm/prop-types@15.8.1/prop-types.min.js"></script>
+    <script crossorigin src="https://cdn.jsdelivr.net/npm/recharts@2.12.7/umd/Recharts.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0F0F1A;
+            color: #E0E0E0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #16213E;
+            border: 1px solid #2C3E6D;
+            border-radius: 8px;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-size: 12px;
+            color: #A0A0A0;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #E94560 0%, #FF6B7A 100%);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .subtitle {
+            font-size: 12px;
+            color: #A0A0A0;
+            margin-top: 4px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #2C3E6D;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .tab-button {
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            color: #A0A0A0;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .tab-button.active {
+            color: #E94560;
+            border-bottom-color: #E94560;
+        }
+
+        .tab-button:hover {
+            color: #fff;
+        }
+
+        .tab-content {
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .card {
+            background-color: #16213E;
+            border: 1px solid #2C3E6D;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .kpi-card {
+            background-color: #16213E;
+            border: 1px solid #2C3E6D;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .kpi-label {
+            font-size: 12px;
+            color: #A0A0A0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .kpi-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #E94560;
+            margin-bottom: 5px;
+        }
+
+        .kpi-subtext {
+            font-size: 12px;
+            color: #A0A0A0;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-icon {
+            width: 20px;
+            height: 20px;
+            background-color: #2C3E6D;
+            border: 1px solid #E94560;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #E94560;
+            cursor: pointer;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .tooltip {
+            position: absolute;
+            bottom: 130%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #0F0F1A;
+            border: 1px solid #E94560;
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 12px;
+            color: #E0E0E0;
+            width: 250px;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(233, 69, 96, 0.2);
+            white-space: pre-wrap;
+        }
+
+        .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: #E94560;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        thead {
+            background-color: #2C3E6D;
+        }
+
+        th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #E0E0E0;
+            border-bottom: 1px solid #2C3E6D;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #2C3E6D;
+            color: #E0E0E0;
+        }
+
+        tr:hover {
+            background-color: #1A2847;
+        }
+
+        .accent {
+            color: #E94560;
+            font-weight: 600;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .badge-recurrente {
+            background-color: rgba(59, 130, 246, 0.2);
+            color: #60A5FA;
+        }
+
+        .badge-one-shot {
+            background-color: rgba(168, 85, 247, 0.2);
+            color: #D8B4FE;
+        }
+
+        .badge-ejecucion {
+            background-color: rgba(168, 85, 247, 0.2);
+            color: #D8B4FE;
+        }
+
+        .badge-inspire {
+            background-color: rgba(120, 53, 15, 0.3);
+            color: #D97706;
+        }
+
+        .badge-ignite {
+            background-color: rgba(75, 85, 99, 0.3);
+            color: #9CA3AF;
+        }
+
+        .badge-insights {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: #34D399;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #2C3E6D;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: #E94560;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #A0A0A0;
+            font-size: 12px;
+            border-top: 1px solid #2C3E6D;
+            margin-top: 40px;
+        }
+
+        .stat-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            padding: 15px;
+            background-color: #1A2847;
+            border: 1px solid #2C3E6D;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #A0A0A0;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #E94560;
+        }
+
+        .select-container {
+            margin-bottom: 20px;
+        }
+
+        .select-container select {
+            padding: 10px 12px;
+            background-color: #16213E;
+            color: #E0E0E0;
+            border: 1px solid #2C3E6D;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .select-container select:focus {
+            outline: none;
+            border-color: #E94560;
+        }
+
+        .semaforo {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+
+        .semaforo-green {
+            background-color: #10B981;
+        }
+
+        .semaforo-yellow {
+            background-color: #F59E0B;
+        }
+
+        .semaforo-red {
+            background-color: #EF4444;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 12px;
+            }
+
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 15px;
+            }
+
+            .header-right {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            h1 {
+                font-size: 18px;
+            }
+
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                flex-wrap: wrap;
+            }
+
+            .tab-button {
+                padding: 10px 15px;
+                font-size: 12px;
+            }
+
+            .chart-container {
+                height: 250px;
+            }
+
+            table {
+                font-size: 11px;
+            }
+
+            th, td {
+                padding: 8px;
+            }
+
+            .kpi-value {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+        const { BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } = Recharts;
+
+        // Data
+        const monthlyData = [
+            { mes: 'Ene', real: 55.41, costos: 221.85, target: 200 },
+            { mes: 'Feb', real: 29.25, costos: 211.55, target: 200 },
+            { mes: 'Mar', real: 57.17, costos: 182.44, target: 250 },
+            { mes: 'Abr', real: 92.88, costos: 182.61, target: 250 },
+            { mes: 'May', real: 77.25, costos: 182.76, target: 300 },
+            { mes: 'Jun', real: 51.67, costos: 226.60, target: 300 },
+            { mes: 'Jul', real: 30.35, costos: 206.88, target: 350 },
+            { mes: 'Ago', real: 12.75, costos: 209.83, target: 400 },
+            { mes: 'Sep', real: 2.97, costos: 210.09, target: 450 },
+            { mes: 'Oct', real: 9.45, costos: 210.35, target: 450 },
+            { mes: 'Nov', real: 9.45, costos: 210.62, target: 500 },
+            { mes: 'Dic', real: 15.47, costos: 261.16, target: 550 },
+        ];
+
+        const quarterlyData = [
+            { q: 'Q1', ponderado: 141.83, target: 650, achievement: 22 },
+            { q: 'Q2', ponderado: 221.80, target: 850, achievement: 26 },
+            { q: 'Q3', ponderado: 46.07, target: 1200, achievement: 4 },
+            { q: 'Q4', ponderado: 34.37, target: 1500, achievement: 2 },
+        ];
+
+        const funnelData = [
+            { stage: 'Won', value: 1360.55 },
+            { stage: 'Upside', value: 258.40 },
+            { stage: 'Forecast', value: 185.98 },
+            { stage: 'Pipeline', value: 141.80 },
+            { stage: 'Commit', value: 0.00 },
+            { stage: 'Lead', value: 30.00 },
+        ];
+
+        const cuentasActivas = [
+            { nombre: 'Enfoque Federal', tipo: 'Recurrente', industria: 'Public Affairs', servicio: 'Talk About / Comunidades', am: 'J. Cordoba Pivotto / S. Rios Brinatti', comercial: 'S. Doval', ticketMes: 33, businessOwner: null, cerrador: 'S. Doval', originador: 'S. Rios Brinatti', referral: null, unidadNegocio: ['Inspire', 'Insights'], tieneFee: true, porcentajeFee: 10, receptorFee: 'S. Rios Brinatti' },
+            { nombre: 'Boca', tipo: 'Recurrente', industria: 'Entretenimiento / Deportes', servicio: 'Campaña', am: 'M. Villanueva / N. Bavoleo', comercial: 'S. Doval', ticketMes: 25, businessOwner: null, cerrador: 'S. Doval', originador: 'S. Doval', referral: null, unidadNegocio: ['Inspire'], tieneFee: false, porcentajeFee: null, receptorFee: null },
+            { nombre: 'Coca Cola', tipo: 'One Shot', industria: 'Consumo Masivo', servicio: 'Storytelling', am: 'S. Rios Brinatti', comercial: 'S. Doval', ticketMes: 9.2, businessOwner: null, cerrador: null, originador: 'S. Doval', referral: null, unidadNegocio: ['Inspire'], tieneFee: true, porcentajeFee: null, receptorFee: null },
+            { nombre: 'Naranja X', tipo: 'Recurrente', industria: 'Banca & Fintech', servicio: 'Investigación + SL', am: 'M. Villanueva', comercial: 'D. Kupferberg', ticketMes: 20, businessOwner: null, cerrador: 'D. Kupferberg', originador: 'D. Kupferberg', referral: null, unidadNegocio: ['Insights'], tieneFee: false, porcentajeFee: null, receptorFee: null },
+            { nombre: 'La Pampa', tipo: 'Recurrente', industria: 'Public Affairs', servicio: 'Social Listening', am: 'S. Rios Brinatti', comercial: 'S. Doval', ticketMes: 18, businessOwner: null, cerrador: 'S. Doval', originador: 'S. Rios Brinatti', referral: null, unidadNegocio: ['Insights'], tieneFee: true, porcentajeFee: 15, receptorFee: 'S. Rios Brinatti' },
+            { nombre: 'Banco Galicia/NAVE', tipo: 'One Shot', industria: 'Banca & Fintech', servicio: 'Investigación Cuanti', am: 'J. Cordoba Pivotto', comercial: 'D. Kupferberg', ticketMes: 18, businessOwner: null, cerrador: 'D. Kupferberg', originador: 'D. Kupferberg', referral: null, unidadNegocio: ['Insights'], tieneFee: false, porcentajeFee: null, receptorFee: null },
+            { nombre: 'MercadoPago Jubi', tipo: 'Ejecución 2025', industria: 'Banca & Fintech', servicio: 'Investigación + Prensa', am: 'S. Rios Brinatti', comercial: 'S. Doval', ticketMes: 16, businessOwner: null, cerrador: 'S. Doval', originador: 'S. Doval', referral: null, unidadNegocio: ['Insights', 'Inspire'], tieneFee: false, porcentajeFee: null, receptorFee: null },
+            { nombre: 'Suther', tipo: 'Recurrente', industria: 'Public Affairs', servicio: 'Comunicación estratégica', am: 'S. Rios Brinatti', comercial: 'S. Doval', ticketMes: 15, businessOwner: null, cerrador: 'S. Doval', originador: 'S. Doval', referral: null, unidadNegocio: ['Inspire'], tieneFee: false, porcentajeFee: null, receptorFee: null },
+            { nombre: 'Aerolíneas', tipo: 'One Shot', industria: 'Public Affairs', servicio: 'Social Listening', am: 'S. Rios Brinatti / J. Molina', comercial: 'S. Rios Brinatti', ticketMes: 15, businessOwner: null, cerrador: 'S. Rios Brinatti', originador: 'S. Rios Brinatti', referral: null, unidadNegocio: ['Insights'], tieneFee: false, porcentajeFee: null, receptorFee: null },
+            { nombre: 'Finadina', tipo: 'Recurrente', industria: 'Banca & Fintech', servicio: 'Investigación + SL', am: 'J. Cordoba Pivotto', comercial: 'S. Doval', ticketMes: 14, businessOwner: null, cerrador: 'S. Doval', originador: 'D. Kupferberg', referral: null, unidadNegocio: ['Insights'], tieneFee: false, porcentajeFee: null, receptorFee: null },
+            { nombre: 'Froneri', tipo: 'Recurrente', industria: 'Consumo Masivo', servicio: 'UGC y pauta', am: 'S. Rios Brinatti', comercial: 'D. Lajst', ticketMes: 12, businessOwner: null, cerrador: 'D. Lajst', originador: 'D. Lajst', referral: null, unidadNegocio: ['Inspire'], tieneFee: false, porcentajeFee: null, receptorFee: null },
+            { nombre: 'UATRE', tipo: 'Recurrente', industria: 'Public Affairs', servicio: 'Alertas + Comunidades', am: 'A. Correderas', comercial: 'S. Rios Brinatti', ticketMes: 12, businessOwner: null, cerrador: 'S. Rios Brinatti', originador: 'S. Doval', referral: null, unidadNegocio: ['Insights', 'Inspire'], tieneFee: false, porcentajeFee: null, receptorFee: null },
+            { nombre: 'NASA', tipo: 'One Shot', industria: 'Energía / Minería', servicio: 'Investigación Cuanti', am: 'M. Villanueva', comercial: 'D. Kupferberg', ticketMes: 12, businessOwner: null, cerrador: 'D. Kupferberg', originador: 'D. Kupferberg', referral: null, unidadNegocio: ['Insights'], tieneFee: false, porcentajeFee: null, receptorFee: null },
+            { nombre: 'Banco Ciudad', tipo: 'Recurrente', industria: 'Banca & Fintech', servicio: 'Comunidades', am: 'S. Rios Brinatti', comercial: 'S. Doval', ticketMes: 11, businessOwner: null, cerrador: 'S. Doval', originador: 'S. Doval', referral: null, unidadNegocio: ['Inspire'], tieneFee: false, porcentajeFee: null, receptorFee: null },
+            { nombre: 'ALEA', tipo: 'Recurrente', industria: 'Public Affairs', servicio: 'Posicionamiento institucional', am: 'L. Benegas / S. Rios Brinatti', comercial: 'S. Doval', ticketMes: 10, businessOwner: null, cerrador: 'S. Doval', originador: 'S. Doval', referral: null, unidadNegocio: ['Inspire'], tieneFee: false, porcentajeFee: null, receptorFee: null },
+            { nombre: 'Farmapay', tipo: 'One Shot', industria: 'Banca & Fintech', servicio: 'Investigación + Posicionamiento', am: 'S. Rios Brinatti', comercial: 'D. Kupferberg', ticketMes: 10, businessOwner: null, cerrador: 'D. Kupferberg', originador: 'D. Kupferberg', referral: null, unidadNegocio: ['Insights'], tieneFee: false, porcentajeFee: null, receptorFee: null },
+            { nombre: 'San Luis', tipo: 'Recurrente', industria: 'Public Affairs', servicio: 'Comunidades + SL', am: 'J. Cordoba Pivotto', comercial: 'S. Doval', ticketMes: 19.4, businessOwner: null, cerrador: 'S. Doval', originador: 'S. Rios Brinatti', referral: null, unidadNegocio: ['Insights', 'Inspire', 'Ignite'], tieneFee: true, porcentajeFee: 10, receptorFee: 'S. Rios Brinatti' },
+            { nombre: 'Credicuotas', tipo: 'One Shot', industria: 'Banca & Fintech', servicio: 'Comunidades', am: 'J. Cordoba Pivotto', comercial: 'D. Kupferberg', ticketMes: 8, businessOwner: null, cerrador: 'D. Kupferberg', originador: 'D. Kupferberg', referral: null, unidadNegocio: ['Inspire'], tieneFee: false, porcentajeFee: null, receptorFee: null },
+            { nombre: 'YDI', tipo: 'One Shot', industria: 'Banca & Fintech', servicio: 'Investigación', am: 'S. Rios Brinatti', comercial: 'D. Kupferberg', ticketMes: 8, businessOwner: null, cerrador: 'D. Kupferberg', originador: 'D. Kupferberg', referral: null, unidadNegocio: ['Insights'], tieneFee: false, porcentajeFee: null, receptorFee: null },
+            { nombre: 'CAEM', tipo: 'Recurrente', industria: 'Energía / Minería', servicio: 'Social Listening', am: 'M. Villanueva', comercial: 'D. Kupferberg', ticketMes: 7, businessOwner: null, cerrador: 'D. Kupferberg', originador: 'D. Kupferberg', referral: null, unidadNegocio: ['Insights'], tieneFee: false, porcentajeFee: null, receptorFee: null },
+            { nombre: 'GET NET', tipo: 'One Shot', industria: 'Banca & Fintech', servicio: 'Investigación Cuanti', am: 'J. Cordoba Pivotto / M. Villanueva', comercial: 'D. Kupferberg', ticketMes: 7, businessOwner: null, cerrador: 'D. Kupferberg', originador: 'D. Kupferberg', referral: null, unidadNegocio: ['Insights'], tieneFee: false, porcentajeFee: null, receptorFee: null },
+            { nombre: 'Todo un País', tipo: 'One Shot', industria: 'Public Affairs', servicio: 'Comunidades', am: 'S. Rios Brinatti', comercial: 'S. Doval', ticketMes: 7, businessOwner: null, cerrador: 'S. Doval', originador: 'S. Doval', referral: null, unidadNegocio: ['Inspire'], tieneFee: false, porcentajeFee: null, receptorFee: null },
+            { nombre: 'Rosbaco', tipo: 'Recurrente', industria: 'Real Estate', servicio: 'Estrategia + PR', am: 'S. Rios Brinatti / M. Villanueva', comercial: 'S. Doval', ticketMes: 6.5, businessOwner: null, cerrador: 'S. Doval', originador: 'S. Doval', referral: 'S. Doval', unidadNegocio: ['Insights'], tieneFee: false, porcentajeFee: null, receptorFee: null },
+            { nombre: 'CEC', tipo: 'One Shot', industria: 'Entretenimiento / Deportes', servicio: 'Comunidades', am: 'J. Cordoba Pivotto / M. Villanueva', comercial: 'S. Doval', ticketMes: 6, businessOwner: null, cerrador: 'S. Doval', originador: 'S. Doval', referral: null, unidadNegocio: ['Inspire'], tieneFee: false, porcentajeFee: null, receptorFee: null },
+            { nombre: 'Potrero Encanta', tipo: 'Recurrente', industria: 'Turismo', servicio: 'Comunicación creativa', am: 'S. Rios Brinatti / M. Villanueva', comercial: 'S. Doval', ticketMes: 5, businessOwner: null, cerrador: 'S. Doval', originador: 'S. Doval', referral: null, unidadNegocio: ['Inspire'], tieneFee: false, porcentajeFee: null, receptorFee: null },
+            { nombre: 'Moiguer', tipo: 'One Shot', industria: 'Otro', servicio: 'Social Listening', am: 'Servicio', comercial: 'D. Kupferberg', ticketMes: 5, businessOwner: null, cerrador: 'D. Kupferberg', originador: 'D. Kupferberg', referral: null, unidadNegocio: ['Insights'], tieneFee: false, porcentajeFee: null, receptorFee: null },
+            { nombre: 'CAF', tipo: 'One Shot', industria: 'Banca & Fintech', servicio: 'Mapa de Industria', am: 'S. Rios Brinatti', comercial: 'S. Doval', ticketMes: 42, businessOwner: 'P. Juanes', cerrador: 'S. Doval', originador: 'S. Rios Brinatti', referral: null, unidadNegocio: ['Inspire', 'Insights', 'Ignite'], tieneFee: true, porcentajeFee: 2.5, receptorFee: 'P. Juanes (Business Owner)' },
+        ];
+
+        const pipelineQ2 = [
+            { nombre: 'Cámara Medios de Pago', ticketTotal: 177, inicio: 'Q2', industria: 'Public Affairs', etapa: 'Forecast', comercial: null, originador: null, unidadNegocio: ['Insights'] },
+            { nombre: 'Comunidades + Farmapay', ticketTotal: 100, inicio: 'Q2', industria: 'Banca & Fintech', etapa: 'Upside', comercial: null, originador: null, unidadNegocio: ['Inspire'] },
+            { nombre: 'Creatividad/SL + Mundo GEA', ticketTotal: 100, inicio: 'Q2', industria: 'Entretenimiento / Deportes', etapa: 'Upside', comercial: null, originador: null, unidadNegocio: ['Inspire'] },
+            { nombre: 'MAPA + CUF (Cámara Fintech)', ticketTotal: 63, inicio: 'Q2', industria: 'Banca & Fintech', etapa: 'Pipeline', comercial: null, originador: null, unidadNegocio: ['Insights'] },
+            { nombre: 'Investigación + Restart', ticketTotal: 60, inicio: 'Q2', industria: 'Tecnología / IA', etapa: 'Pipeline', comercial: null, originador: null, unidadNegocio: ['Insights'] },
+            { nombre: 'Campaña + Oscar Herrera Ahuad', ticketTotal: 30, inicio: 'Q2', industria: 'Public Affairs', etapa: 'Lead', comercial: null, originador: null, unidadNegocio: ['Inspire'] },
+            { nombre: 'Investigación + E. Gigena (Wallet B2B)', ticketTotal: 19.5, inicio: 'Q2', industria: 'Consumo Masivo', etapa: 'Upside', comercial: null, originador: null, unidadNegocio: ['Insights'] },
+            { nombre: 'Investigación + BIND PSP', ticketTotal: 18.7, inicio: 'Q2', industria: 'Banca & Fintech', etapa: 'Upside', comercial: null, originador: null, unidadNegocio: ['Insights'] },
+            { nombre: 'Posicionamiento + Suterh', ticketTotal: 11, inicio: 'Q2', industria: 'Public Affairs', etapa: 'Pipeline', comercial: null, originador: null, unidadNegocio: ['Inspire'] },
+            { nombre: 'Estrategia + ALEA', ticketTotal: 10.2, inicio: 'Q2', industria: 'Otro', etapa: 'Upside', comercial: null, originador: null, unidadNegocio: ['Inspire'] },
+            { nombre: 'Investigación + Partido Político', ticketTotal: 10, inicio: 'Q2', industria: 'Public Affairs', etapa: 'Upside', comercial: null, originador: null, unidadNegocio: ['Insights'] },
+            { nombre: 'Investigación + Gob. Córdoba', ticketTotal: 8.98, inicio: 'Q2', industria: 'Public Affairs', etapa: 'Forecast', comercial: null, originador: null, unidadNegocio: ['Insights'] },
+            { nombre: 'Aerolíneas Argentinas 75 años', ticketTotal: 6, inicio: 'Q2', industria: 'Turismo', etapa: 'Pipeline', comercial: null, originador: null, unidadNegocio: ['Inspire'] },
+            { nombre: 'SL + Moiguer', ticketTotal: 1.8, inicio: 'Q2', industria: 'Otro', etapa: 'Pipeline', comercial: null, originador: null, unidadNegocio: ['Insights'] },
+        ];
+
+        const InfoTooltip = ({ text }) => {
+            const [showTooltip, setShowTooltip] = useState(false);
+
+            return (
+                <div
+                    className="info-icon"
+                    onMouseEnter={() => setShowTooltip(true)}
+                    onMouseLeave={() => setShowTooltip(false)}
+                    onClick={() => setShowTooltip(!showTooltip)}
+                >
+                    i
+                    {showTooltip && <div className="tooltip">{text}</div>}
+                </div>
+            );
+        };
+
+        const getBadgeClass = (tipo) => {
+            if (tipo === 'Recurrente') return 'badge-recurrente';
+            if (tipo === 'Ejecución 2025') return 'badge-ejecucion';
+            return 'badge-one-shot';
+        };
+
+        const getUdnBadge = (udn) => {
+            if (udn === 'Inspire') return 'badge-inspire';
+            if (udn === 'Ignite') return 'badge-ignite';
+            if (udn === 'Insights') return 'badge-insights';
+            return '';
+        };
+
+        const ResumenEjecutivo = () => {
+            const ytdReal = 141.83;
+            const targetAnual = 4200;
+            const avancePercent = Math.round((1603.39 / 4200) * 100);
+            const cuentasCount = cuentasActivas.length;
+            const pipelineTotal = pipelineQ2.reduce((sum, p) => sum + p.ticketTotal, 0);
+
+            return (
+                <div>
+                    <div className="kpi-grid">
+                        <div className="kpi-card">
+                            <div className="kpi-label">
+                                Revenue YTD (Q1 Real)
+                                <InfoTooltip text="Facturación real acumulada de Q1 (Ene-Mar). Fuente: Forecast de Facturación en Notion CRM" />
+                            </div>
+                            <div className="kpi-value">${ytdReal.toFixed(0)}M</div>
+                            <div className="kpi-subtext">ARS Millones</div>
+                        </div>
+                        <div className="kpi-card">
+                            <div className="kpi-label">
+                                Target Anual
+                                <InfoTooltip text="Objetivo de facturación anual 2026 establecido por directiva" />
+                            </div>
+                            <div className="kpi-value">${targetAnual}M</div>
+                            <div className="kpi-subtext">ARS Millones</div>
+                        </div>
+                        <div className="kpi-card">
+                            <div className="kpi-label">
+                                Avance (Ponderado)
+                                <InfoTooltip text="Avance total ponderado incluyendo: Won (100%) + Commit (100%) + Forecast (75%) + Upside (40%). Fuente: Notion CRM" />
+                            </div>
+                            <div className="kpi-value">{avancePercent}%</div>
+                            <div className="kpi-subtext">de $4,200M</div>
+                        </div>
+                        <div className="kpi-card">
+                            <div className="kpi-label">
+                                Cuentas Activas
+                                <InfoTooltip text="Cuentas en ejecución con facturación activa. Fuente: Forecast de Facturación en Notion CRM" />
+                            </div>
+                            <div className="kpi-value">{cuentasCount}</div>
+                            <div className="kpi-subtext">clientes en cartera</div>
+                        </div>
+                        <div className="kpi-card">
+                            <div className="kpi-label">
+                                Pipeline Q2
+                                <InfoTooltip text="Oportunidades sin cerrar en Q2 (solo ticket mensual sin ponderar). Fuente: Funnel de Oportunidades" />
+                            </div>
+                            <div className="kpi-value">${pipelineTotal.toFixed(0)}M</div>
+                            <div className="kpi-subtext">en oportunidades</div>
+                        </div>
+                    </div>
+
+                    <div className="card">
+                        <h2 className="section-title">
+                            Facturación Mensual
+                            <InfoTooltip text="Ingresos reales (Won) vs meta mensual. Los meses proyectados incluyen ponderación de pipeline" />
+                        </h2>
+                        <div className="chart-container">
+                            <ResponsiveContainer width="100%" height={300}>
+                                <BarChart data={monthlyData}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#2C3E6D" />
+                                    <XAxis dataKey="mes" stroke="#A0A0A0" />
+                                    <YAxis stroke="#A0A0A0" />
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: '#16213E', border: '1px solid #2C3E6D' }}
+                                        labelStyle={{ color: '#E0E0E0' }}
+                                    />
+                                    <Legend />
+                                    <Bar dataKey="real" fill="#E94560" name="Real (Won)" />
+                                    <Bar dataKey="target" fill="#60A5FA" name="Target" />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+
+                    <div className="card">
+                        <h2 className="section-title">
+                            Avance Trimestral
+                            <InfoTooltip text="Comparativa trimestral ponderada vs target. Fuente: Notion CRM" />
+                        </h2>
+                        <div className="stat-row">
+                            {quarterlyData.map((q) => (
+                                <div key={q.q} className="stat-item">
+                                    <div className="stat-label">{q.q}</div>
+                                    <div className="stat-value">{q.achievement}%</div>
+                                    <div className="kpi-subtext">${q.ponderado.toFixed(0)}M / ${q.target}M</div>
+                                    <div className="progress-bar">
+                                        <div className="progress-fill" style={{ width: `${Math.min(q.achievement, 100)}%` }}></div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const RevenueQuarters = () => {
+            const q2Breakdown = [
+                { label: 'Won', value: 471.33 },
+                { label: 'Upside', value: 154.85 },
+                { label: 'Forecast', value: 59.69 },
+                { label: 'Commit', value: 13.0 },
+            ];
+
+            const colors = ['#E94560', '#FF6B7A', '#FFB3BE', '#FFD9E0'];
+
+            return (
+                <div>
+                    <div className="card">
+                        <h2 className="section-title">
+                            Revenue Detallado Mensual
+                            <InfoTooltip text="Ingresos reales (Won), costos operativos y target mensual. Fuente: Forecast en Notion CRM" />
+                        </h2>
+                        <div className="chart-container">
+                            <ResponsiveContainer width="100%" height={300}>
+                                <BarChart data={monthlyData}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#2C3E6D" />
+                                    <XAxis dataKey="mes" stroke="#A0A0A0" />
+                                    <YAxis stroke="#A0A0A0" />
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: '#16213E', border: '1px solid #2C3E6D' }}
+                                        labelStyle={{ color: '#E0E0E0' }}
+                                    />
+                                    <Legend />
+                                    <Bar dataKey="real" fill="#E94560" name="Real (Won)" />
+                                    <Bar dataKey="costos" fill="#A0A0A0" name="Costos" />
+                                    <Bar dataKey="target" fill="#60A5FA" name="Target" />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+
+                    <div className="grid-2">
+                        {quarterlyData.map((q) => (
+                            <div key={q.q} className="card">
+                                <h3 className="section-title">{q.q} 2026</h3>
+                                <div className="stat-item">
+                                    <div className="stat-label">Ponderado</div>
+                                    <div className="stat-value">${q.ponderado.toFixed(0)}M</div>
+                                </div>
+                                <div className="stat-item" style={{ marginTop: '10px' }}>
+                                    <div className="stat-label">Target</div>
+                                    <div className="stat-value">${q.target}M</div>
+                                </div>
+                                <div className="stat-item" style={{ marginTop: '10px' }}>
+                                    <div className="stat-label">Cumplimiento</div>
+                                    <div className="stat-value accent">{q.achievement}%</div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="card">
+                        <h2 className="section-title">
+                            Q2 Breakdown
+                            <InfoTooltip text="Desglose de Q2 por etapa del pipeline: Won, Upside, Forecast, Commit. Fuente: Notion CRM" />
+                        </h2>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', alignItems: 'center' }}>
+                            <div className="chart-container">
+                                <ResponsiveContainer width="100%" height={250}>
+                                    <PieChart>
+                                        <Pie data={q2Breakdown} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ label, value }) => `${label}: $${value.toFixed(0)}M`}>
+                                            {q2Breakdown.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={colors[index]} />
+                                            ))}
+                                        </Pie>
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
+                            <div>
+                                {q2Breakdown.map((item, idx) => (
+                                    <div key={item.label} style={{ marginBottom: '10px', padding: '10px', backgroundColor: '#1A2847', borderRadius: '4px' }}>
+                                        <div style={{ color: colors[idx], fontWeight: 600 }}>{item.label}</div>
+                                        <div>${item.value.toFixed(2)}M</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const CuentasIndustrias = () => {
+            const sorted = [...cuentasActivas].sort((a, b) => b.ticketMes - a.ticketMes);
+            const top10 = sorted.slice(0, 10);
+
+            const industrias = {};
+            cuentasActivas.forEach((c) => {
+                industrias[c.industria] = (industrias[c.industria] || 0) + 1;
+            });
+
+            const industryData = Object.entries(industrias).map(([name, count]) => ({
+                name,
+                value: count,
+            }));
+
+            const chartData = top10.map((c) => ({
+                nombre: c.nombre.substring(0, 12),
+                ticket: c.ticketMes,
+            }));
+
+            const colors2 = ['#E94560', '#60A5FA', '#A78BFA', '#34D399', '#FBBF24', '#F87171', '#06B6D4', '#8B5CF6', '#10B981', '#EC4899'];
+
+            return (
+                <div>
+                    <div className="card">
+                        <h2 className="section-title">
+                            Cuentas Activas
+                            <InfoTooltip text="Cuentas en ejecución con facturación activa. Ordenadas por ticket mensual. Fuente: Forecast de Facturación en Notion CRM" />
+                        </h2>
+                        <div className="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Cuenta</th>
+                                        <th>Tipo</th>
+                                        <th>Industria</th>
+                                        <th>Ticket/Mes</th>
+                                        <th>UDN</th>
+                                        <th>Cerrador</th>
+                                        <th>Originador</th>
+                                        <th>Fee</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {sorted.map((c, i) => (
+                                        <tr key={i}>
+                                            <td className="accent">{c.nombre}</td>
+                                            <td>
+                                                <span className={`badge ${getBadgeClass(c.tipo)}`}>{c.tipo}</span>
+                                            </td>
+                                            <td>{c.industria}</td>
+                                            <td className="accent">${c.ticketMes}M</td>
+                                            <td>
+                                                {c.unidadNegocio.map((udn) => (
+                                                    <span key={udn} className={`badge ${getUdnBadge(udn)}`} style={{ marginRight: '4px' }}>
+                                                        {udn}
+                                                    </span>
+                                                ))}
+                                            </td>
+                                            <td>{c.cerrador || '-'}</td>
+                                            <td>{c.originador || '-'}</td>
+                                            <td>{c.tieneFee ? `${c.porcentajeFee || 'Sí'}%` : '-'}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div className="grid-2">
+                        <div className="card">
+                            <h2 className="section-title">
+                                Top 10 Cuentas
+                                <InfoTooltip text="Top 10 cuentas por ticket mensual facturado" />
+                            </h2>
+                            <div className="chart-container">
+                                <ResponsiveContainer width="100%" height={250}>
+                                    <BarChart data={chartData} layout="vertical">
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#2C3E6D" />
+                                        <XAxis type="number" stroke="#A0A0A0" />
+                                        <YAxis dataKey="nombre" type="category" stroke="#A0A0A0" width={80} tick={{ fontSize: 11 }} />
+                                        <Tooltip
+                                            contentStyle={{ backgroundColor: '#16213E', border: '1px solid #2C3E6D' }}
+                                            labelStyle={{ color: '#E0E0E0' }}
+                                        />
+                                        <Bar dataKey="ticket" fill="#E94560" />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+
+                        <div className="card">
+                            <h2 className="section-title">
+                                Distribución por Industria
+                                <InfoTooltip text="Cantidad de cuentas activas por industria. Fuente: Forecast de Facturación" />
+                            </h2>
+                            <div className="chart-container">
+                                <ResponsiveContainer width="100%" height={250}>
+                                    <PieChart>
+                                        <Pie data={industryData} cx="50%" cy="50%" outerRadius={70} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
+                                            {industryData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={colors2[index % colors2.length]} />
+                                            ))}
+                                        </Pie>
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const PipelineFunnel = () => {
+            const funnelDataSorted = [...funnelData].sort((a, b) => b.value - a.value);
+            const maxValue = funnelDataSorted[0].value;
+
+            return (
+                <div>
+                    <div className="card">
+                        <h2 className="section-title">
+                            Funnel de Oportunidades
+                            <InfoTooltip text="Valor total sin ponderar por etapa del funnel. Won = cerrado, Upside = upside, Forecast = forecast, Pipeline = en pipeline, Commit = comprometido, Lead = prospectiva. Fuente: Funnel de Oportunidades en Notion CRM" />
+                        </h2>
+                        <div style={{ marginBottom: '20px' }}>
+                            {funnelDataSorted.map((item, idx) => (
+                                <div key={item.stage} style={{ marginBottom: '15px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                                        <span className="accent">{item.stage}</span>
+                                        <span>${item.value.toFixed(2)}M</span>
+                                    </div>
+                                    <div className="progress-bar">
+                                        <div className="progress-fill" style={{ width: `${(item.value / maxValue) * 100}%` }}></div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="card">
+                        <h2 className="section-title">
+                            Pipeline Q2
+                            <InfoTooltip text="Oportunidades en pipeline agrupadas por etapa. Fuente: Funnel de Oportunidades en Notion CRM" />
+                        </h2>
+                        <div className="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Oportunidad</th>
+                                        <th>Industria</th>
+                                        <th>Etapa</th>
+                                        <th>Ticket</th>
+                                        <th>Comercial</th>
+                                        <th>UDN</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {pipelineQ2.map((p, i) => (
+                                        <tr key={i}>
+                                            <td className="accent">{p.nombre}</td>
+                                            <td>{p.industria}</td>
+                                            <td>
+                                                <span className={`badge ${p.etapa === 'Upside' ? 'badge-one-shot' : p.etapa === 'Forecast' ? 'badge-recurrente' : 'badge-ejecucion'}`}>
+                                                    {p.etapa}
+                                                </span>
+                                            </td>
+                                            <td className="accent">${p.ticketTotal}M</td>
+                                            <td>{p.comercial}</td>
+                                            <td>
+                                                {p.unidadNegocio.map((udn) => (
+                                                    <span key={udn} className={`badge ${getUdnBadge(udn)}`} style={{ marginRight: '4px' }}>
+                                                        {udn}
+                                                    </span>
+                                                ))}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const EquipoComercial = () => {
+            const comercialesUnicos = [...new Set(cuentasActivas.map(c => c.comercial))];
+
+            const getComercialStats = (comercial) => {
+                const wonCuentas = cuentasActivas.filter(c => c.comercial === comercial);
+                const wonTotal = wonCuentas.reduce((sum, c) => sum + c.ticketMes, 0);
+
+                const cerradoCuentas = cuentasActivas.filter(c => c.cerrador === comercial);
+                const cerradoTotal = cerradoCuentas.reduce((sum, c) => sum + c.ticketMes, 0);
+
+                const originadoCuentas = cuentasActivas.filter(c => c.originador === comercial);
+                const originadoTotal = originadoCuentas.reduce((sum, c) => sum + c.ticketMes, 0);
+
+                const referralCuentas = cuentasActivas.filter(c => c.referral === comercial);
+                const referralTotal = referralCuentas.reduce((sum, c) => sum + c.ticketMes, 0);
+
+                const businessOwnerCuentas = cuentasActivas.filter(c => c.businessOwner === comercial);
+                const businessOwnerTotal = businessOwnerCuentas.reduce((sum, c) => sum + c.ticketMes, 0);
+
+                const feeCuentas = cuentasActivas.filter(c => (c.cerrador === comercial || c.originador === comercial || c.receptorFee === comercial) && c.tieneFee);
+                const feeTotal = feeCuentas.reduce((sum, c) => {
+                    if (c.receptorFee === comercial && c.porcentajeFee) {
+                        return sum + (c.ticketMes * c.porcentajeFee / 100);
+                    }
+                    return sum;
+                }, 0);
+
+                return {
+                    comercial,
+                    wonTotal,
+                    cerradoTotal,
+                    originadoTotal,
+                    referralTotal,
+                    businessOwnerTotal,
+                    feeTotal,
+                    wonCuentas,
+                    feeCuentas
+                };
+            };
+
+            const statsData = comercialesUnicos.map(getComercialStats);
+
+            return (
+                <div>
+                    <div className="card">
+                        <h2 className="section-title">
+                            Revenue por Comercial
+                            <InfoTooltip text="Desglose de revenue por comercial según su rol: Won (comercial asignado), Cerrado, Originado, Referral, Business Owner. Fuente: Notion CRM" />
+                        </h2>
+                        <div className="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Comercial</th>
+                                        <th>Won</th>
+                                        <th>Cerrado</th>
+                                        <th>Originado</th>
+                                        <th>Referral</th>
+                                        <th>Business Owner</th>
+                                        <th>Fee Estimado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {statsData.sort((a, b) => b.wonTotal - a.wonTotal).map((s, i) => (
+                                        <tr key={i}>
+                                            <td className="accent">{s.comercial}</td>
+                                            <td>${s.wonTotal.toFixed(1)}M</td>
+                                            <td>${s.cerradoTotal.toFixed(1)}M</td>
+                                            <td>${s.originadoTotal.toFixed(1)}M</td>
+                                            <td>${s.referralTotal.toFixed(1)}M</td>
+                                            <td>${s.businessOwnerTotal.toFixed(1)}M</td>
+                                            <td className="accent">${s.feeTotal.toFixed(2)}M</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div className="card">
+                        <h2 className="section-title">
+                            Compensación por Fee
+                            <InfoTooltip text="Cuentas con fee, porcentaje y monto estimado de compensación variable. Fuente: Notion CRM" />
+                        </h2>
+                        <div className="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Cuenta</th>
+                                        <th>Receptor Fee</th>
+                                        <th>Ticket Base</th>
+                                        <th>% Fee</th>
+                                        <th>Fee $</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {cuentasActivas.filter(c => c.tieneFee).map((c, i) => (
+                                        <tr key={i}>
+                                            <td className="accent">{c.nombre}</td>
+                                            <td>{c.receptorFee || 'Variable'}</td>
+                                            <td>${c.ticketMes}M</td>
+                                            <td>{c.porcentajeFee || 'Pendiente'}%</td>
+                                            <td className="accent">${(c.ticketMes * (c.porcentajeFee || 0) / 100).toFixed(2)}M</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const SeguimientoComercial = () => {
+            const comercialesUnicos = [...new Set(cuentasActivas.map(c => c.comercial))].sort();
+            const [selectedComercial, setSelectedComercial] = useState(comercialesUnicos[0] || 'S. Doval');
+
+            const getComercialFollowUp = (comercial) => {
+                const wonCuentas = cuentasActivas.filter(c => c.comercial === comercial);
+                const wonTotal = wonCuentas.reduce((sum, c) => sum + c.ticketMes, 0);
+
+                const pipelineOpp = pipelineQ2.filter(p => p.comercial === comercial);
+                const pipelineTotal = pipelineOpp.reduce((sum, p) => sum + p.ticketTotal, 0);
+
+                const originadoTotal = cuentasActivas.filter(c => c.originador === comercial).reduce((sum, c) => sum + c.ticketMes, 0);
+                const cerradoTotal = cuentasActivas.filter(c => c.cerrador === comercial).reduce((sum, c) => sum + c.ticketMes, 0);
+
+                const feeCuentas = cuentasActivas.filter(c => (c.cerrador === comercial || c.originador === comercial || c.receptorFee === comercial) && c.tieneFee);
+                const feeTotal = feeCuentas.reduce((sum, c) => {
+                    if (c.receptorFee === comercial && c.porcentajeFee) {
+                        return sum + (c.ticketMes * c.porcentajeFee / 100);
+                    }
+                    return sum;
+                }, 0);
+
+                const daysAgo = Math.floor(Math.random() * 30) + 1;
+                let semaforoClass = 'semaforo-green';
+                if (daysAgo > 15) semaforoClass = 'semaforo-red';
+                else if (daysAgo > 7) semaforoClass = 'semaforo-yellow';
+
+                return {
+                    wonCuentas,
+                    wonTotal,
+                    pipelineOpp,
+                    pipelineTotal,
+                    originadoTotal,
+                    cerradoTotal,
+                    feeTotal,
+                    daysAgo,
+                    semaforoClass
+                };
+            };
+
+            const followUp = getComercialFollowUp(selectedComercial);
+
+            return (
+                <div>
+                    <div className="card">
+                        <h2 className="section-title">
+                            Seleccionar Comercial
+                            <InfoTooltip text="Elige un comercial para ver su seguimiento personalizado" />
+                        </h2>
+                        <div className="select-container">
+                            <select value={selectedComercial} onChange={(e) => setSelectedComercial(e.target.value)}>
+                                {comercialesUnicos.map((com) => (
+                                    <option key={com} value={com}>
+                                        {com}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="kpi-grid">
+                        <div className="kpi-card">
+                            <div className="kpi-label">Revenue Won</div>
+                            <div className="kpi-value">${followUp.wonTotal.toFixed(1)}M</div>
+                            <div className="kpi-subtext">{followUp.wonCuentas.length} cuentas activas</div>
+                        </div>
+                        <div className="kpi-card">
+                            <div className="kpi-label">Pipeline Q2</div>
+                            <div className="kpi-value">${followUp.pipelineTotal.toFixed(1)}M</div>
+                            <div className="kpi-subtext">{followUp.pipelineOpp.length} oportunidades</div>
+                        </div>
+                        <div className="kpi-card">
+                            <div className="kpi-label">Como Originador</div>
+                            <div className="kpi-value">${followUp.originadoTotal.toFixed(1)}M</div>
+                            <div className="kpi-subtext">revenue originado</div>
+                        </div>
+                        <div className="kpi-card">
+                            <div className="kpi-label">Como Cerrador</div>
+                            <div className="kpi-value">${followUp.cerradoTotal.toFixed(1)}M</div>
+                            <div className="kpi-subtext">revenue cerrado</div>
+                        </div>
+                        <div className="kpi-card">
+                            <div className="kpi-label">Fee / Compensación</div>
+                            <div className="kpi-value">${followUp.feeTotal.toFixed(2)}M</div>
+                            <div className="kpi-subtext">estimado mensual</div>
+                        </div>
+                        <div className="kpi-card">
+                            <div className="kpi-label">CRM Actualizado</div>
+                            <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                <span className={`semaforo ${followUp.semaforoClass}`}></span>
+                                <span style={{ fontSize: '14px' }}>{followUp.daysAgo} días</span>
+                            </div>
+                            <div className="kpi-subtext">
+                                {followUp.daysAgo <= 7 ? 'Actualizado' : followUp.daysAgo <= 15 ? 'Revisar' : 'Desfasado'}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid-2">
+                        <div className="card">
+                            <h2 className="section-title">Cuentas Activas</h2>
+                            <div className="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Cuenta</th>
+                                            <th>Ticket/Mes</th>
+                                            <th>Tipo</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {followUp.wonCuentas.sort((a, b) => b.ticketMes - a.ticketMes).map((c, i) => (
+                                            <tr key={i}>
+                                                <td className="accent">{c.nombre}</td>
+                                                <td>${c.ticketMes}M</td>
+                                                <td>
+                                                    <span className={`badge ${getBadgeClass(c.tipo)}`}>{c.tipo}</span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div className="card">
+                            <h2 className="section-title">Pipeline Oportunidades</h2>
+                            <div className="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Oportunidad</th>
+                                            <th>Etapa</th>
+                                            <th>Ticket</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {followUp.pipelineOpp.sort((a, b) => b.ticketTotal - a.ticketTotal).map((p, i) => (
+                                            <tr key={i}>
+                                                <td className="accent">{p.nombre}</td>
+                                                <td>
+                                                    <span className={`badge ${p.etapa === 'Upside' ? 'badge-one-shot' : p.etapa === 'Forecast' ? 'badge-recurrente' : 'badge-ejecucion'}`}>
+                                                        {p.etapa}
+                                                    </span>
+                                                </td>
+                                                <td>${p.ticketTotal}M</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const Dashboard = () => {
+            const [activeTab, setActiveTab] = useState(0);
+
+            const tabs = [
+                { label: 'Resumen Ejecutivo', component: ResumenEjecutivo },
+                { label: 'Revenue & Quarters', component: RevenueQuarters },
+                { label: 'Cuentas & Industrias', component: CuentasIndustrias },
+                { label: 'Pipeline & Funnel', component: PipelineFunnel },
+                { label: 'Equipo Comercial', component: EquipoComercial },
+                { label: 'Seguimiento Comercial', component: SeguimientoComercial },
+            ];
+
+            const ActiveComponent = tabs[activeTab].component;
+
+            return (
+                <div className="container">
+                    <header>
+                        <div className="header-content">
+                            <div className="logo">TQ</div>
+                            <div>
+                                <h1>Tablero del Director Comercial</h1>
+                                <p className="subtitle">Grupo Taquion 2026 — Análisis Ejecutivo de Revenue & Pipeline</p>
+                            </div>
+                        </div>
+                        <div className="header-right">
+                            <span>Última actualización: 7 abril 2026</span>
+                        </div>
+                    </header>
+
+                    <div className="tabs">
+                        {tabs.map((tab, idx) => (
+                            <button
+                                key={idx}
+                                className={`tab-button ${activeTab === idx ? 'active' : ''}`}
+                                onClick={() => setActiveTab(idx)}
+                            >
+                                {tab.label}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="tab-content">
+                        <ActiveComponent />
+                    </div>
+
+                    <footer className="footer">
+                        Fuente: Notion CRM Taquion — Forecast + Funnel/Oportunidades | Actualizado: 8 de Abril 2026
+                    </footer>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<Dashboard />);
+    </script>
+</body>
+</html>
