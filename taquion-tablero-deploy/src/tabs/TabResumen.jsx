@@ -9,9 +9,8 @@ export default function TabResumen() {
 
   const q1Real = REVENUE_2026.slice(0, 3).reduce((s, m) => s + m.real, 0);
   const q1Target = REVENUE_2026.slice(0, 3).reduce((s, m) => s + m.target, 0);
-  // Proyección anual: Monto Mensual Ajustado para TODOS los meses (Won=100%, Forecast=75%, Upside=40%)
-  // Esto coincide con "Proyectado Anual" de Notion ($2,293M)
-  const annualProjected = REVENUE_2026.reduce((s, m) => s + (m.projected || 0), 0);
+  // Revenue Won anual: suma de Monto Mensual solo para deals Won (revenue confirmado)
+  const annualWon = REVENUE_2026.reduce((s, m) => s + (m.real || 0), 0);
   const annualTarget = REVENUE_2026.reduce((s, m) => s + m.target, 0);
 
   // Chart data: siempre mostrar projected (Monto Mensual Ajustado) para igualar Notion
@@ -51,7 +50,7 @@ export default function TabResumen() {
     <div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
         <KPICard title="Revenue Q1 2026 (Real)" value={fmtM(q1Real)} subtitle={q1Target > 0 ? (q1Real / q1Target * 100).toFixed(0) + "% del target Q1" : "Target pendiente"} color={COLORS.green} />
-        <KPICard title="Proyeccion Anual" value={fmtM(annualProjected)} subtitle={annualTarget > 0 ? (annualProjected / annualTarget * 100).toFixed(0) + "% de " + fmtM(annualTarget) + " target" : "Target pendiente"} color={annualProjected > annualTarget ? COLORS.green : COLORS.warning} />
+        <KPICard title="Revenue Anual Won" value={fmtM(annualWon)} subtitle={annualTarget > 0 ? (annualWon / annualTarget * 100).toFixed(0) + "% de " + fmtM(annualTarget) + " target" : "Target pendiente"} color={annualWon > annualTarget ? COLORS.green : COLORS.warning} />
         <KPICard title={"Pipeline Total (" + OPPORTUNITIES.length + " opps)"} value={fmtM(totalPipeline)} subtitle="Commit a Pipeline activo" color={COLORS.blue} />
         <KPICard title="Cuentas Activas" value={CUENTAS_ACTIVAS.length} subtitle={upsellingCount + " opps upselling | " + newCount + " nuevas"} color={COLORS.purple} />
       </div>

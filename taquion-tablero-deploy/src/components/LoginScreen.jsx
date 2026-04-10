@@ -36,7 +36,7 @@ export default function LoginScreen({ onLogin }) {
           </button>
         </div>
         <div style={{ textAlign: "center", marginTop: 16, fontSize: 11, color: COLORS.gray }}>
-          Usuario: taquion | Clave: comercial2026
+          Grupo Taquion &copy; 2026
         </div>
       </div>
     </div>
