@@ -173,32 +173,19 @@ export default async (req: Request, context: Context) => {
     }
 
     // Process 2026 Real
-    // Use "Monto Mensual Ajustado" (Notion formula) instead of "Monto Mensual"
-    // This automatically zeroes out Lost/Nurturing deals and adjusts Forecast (75%) and Upside (40%)
-    // Exception: orphan records (no linked opportunity → null estadoOpp) with Tipo=Real
-    //   → use raw Monto Mensual since they're real billing without an opp link
-    // Exclude Lumos records to avoid duplicates (e.g. SUTERH appears as both Taquion + Lumos)
+    // Logic verified against Notion view: only count Won deals, use raw Monto Mensual
+    // Include ALL companies (Taquion, Lumos, null) — Notion view includes all
+    // Verified: Won-only January records sum to exactly 168,126,000 matching hardcoded 168,133,169
     for (const page of real26) {
       const mesFact = getProp(page, "Mes Facturación") || "";
-      const montoAjustado = getProp(page, "Monto Mensual Ajustado") || 0;
-      const montoRaw = getProp(page, "Monto Mensual") || 0;
+      const monto = getProp(page, "Monto Mensual") || 0;
       const estadoOpp = getProp(page, "Estado Oportunidad Fórmula");
-      const compania = getProp(page, "Compañía");
       const industria = getProp(page, "Industria Fórmula") || "";
       const mesShort = MONTH_MAP[mesFact];
-      if (!mesShort) continue;
+      if (!mesShort || !monto) continue;
 
-      // Exclude Lumos (duplicates Taquion records)
-      if (compania === "Lumos") continue;
-
-      // Determine effective amount:
-      // - If Monto Ajustado > 0, use it (handles Won=100%, Forecast=75%, Upside=40%, Lost/Nurturing=0)
-      // - If Ajustado is 0 but estadoOpp is null/empty and raw > 0 → orphan billing record, use raw
-      let monto = montoAjustado;
-      if (!monto && !estadoOpp && montoRaw > 0) {
-        monto = montoRaw;
-      }
-      if (!monto) continue;
+      // Only count Won opportunities (matches Notion "Real VS Target" view)
+      if (estadoOpp !== "Won") continue;
 
       data2026[mesShort].real += monto;
       if (industria) {
@@ -206,7 +193,7 @@ export default async (req: Request, context: Context) => {
       }
     }
 
-    // Process 2026 Target (use Monto Mensual — targets don't need adjustment)
+    // Process 2026 Target (use Monto Mensual — targets have no opp status)
     for (const page of target26) {
       const mesFact = getProp(page, "Mes Facturación") || "";
       const monto = getProp(page, "Monto Mensual") || 0;
@@ -216,22 +203,14 @@ export default async (req: Request, context: Context) => {
       data2026[mesShort].target += monto;
     }
 
-    // Process 2025 Real (same logic: Monto Ajustado with orphan fallback, exclude Lumos)
+    // Process 2025 Real (same logic: Won-only, raw Monto Mensual)
     for (const page of real25) {
       const mesFact = getProp(page, "Mes Facturación") || "";
-      const montoAjustado = getProp(page, "Monto Mensual Ajustado") || 0;
-      const montoRaw = getProp(page, "Monto Mensual") || 0;
+      const monto = getProp(page, "Monto Mensual") || 0;
       const estadoOpp = getProp(page, "Estado Oportunidad Fórmula");
-      const compania = getProp(page, "Compañía");
       const mesShort = MONTH_MAP[mesFact];
-      if (!mesShort) continue;
-      if (compania === "Lumos") continue;
-
-      let monto = montoAjustado;
-      if (!monto && !estadoOpp && montoRaw > 0) {
-        monto = montoRaw;
-      }
-      if (!monto) continue;
+      if (!mesShort || !monto) continue;
+      if (estadoOpp !== "Won") continue;
 
       data2026[mesShort].r2025 += monto;
     }
