@@ -31,7 +31,7 @@ export default function TabRevenue() {
 
   return (
     <div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
+      <div className="kpi-grid">
         {qData.map(q => (
           <div key={q.name} style={{ background: "white", borderRadius: 12, padding: 20, borderTop: "3px solid " + (q.pct >= 100 ? COLORS.green : q.pct >= 80 ? COLORS.warning : COLORS.red) }}>
             <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.dark, marginBottom: 8 }}>{q.name} 2026</div>
@@ -47,6 +47,9 @@ export default function TabRevenue() {
 
       <SectionTitle>Evolucion Acumulada Anual</SectionTitle>
       <div style={{ background: "white", borderRadius: 12, padding: 24 }}>
+        <div style={{ background: COLORS.blue + "10", border: "1px solid " + COLORS.blue + "30", borderRadius: 8, padding: "10px 14px", marginBottom: 16, fontSize: 12, color: COLORS.dark, lineHeight: 1.5 }}>
+          <strong>Ingresos Ponderados</strong> = revenue estimado usando probabilidad de cierre: Won se cuenta al 100%, Forecast al 75%, y Upside al 40%. Refleja el campo "Monto Mensual Ajustado" de Notion.
+        </div>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={cumulativeData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -62,7 +65,7 @@ export default function TabRevenue() {
       </div>
 
       <SectionTitle>Revenue Mensual Detallado</SectionTitle>
-      <div style={{ background: "white", borderRadius: 12, padding: 24, overflowX: "auto" }}>
+      <div className="table-responsive" style={{ background: "white", borderRadius: 12, padding: 24, overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
             <tr style={{ borderBottom: "2px solid " + COLORS.dark }}>

@@ -181,7 +181,7 @@ export default function TabSeguimiento() {
       </div>
 
       {/* KPIs principales */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
+      <div className="kpi-grid">
         <KPICard
           title="Revenue Q1 como Originador"
           value={fmtM(stats.revenueOriginador)}
@@ -227,7 +227,7 @@ export default function TabSeguimiento() {
       </div>
 
       {/* Cumplimiento mensual (para GC) o Revenue por mes */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 24 }}>
+      <div className="grid-2col-even">
         <div style={{ background: "white", borderRadius: 12, padding: 24 }}>
           <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 16, color: COLORS.dark }}>
             {person.modelRole === "GC" ? "Cumplimiento Mensual vs Target" : "Revenue Originado por Mes"}
@@ -283,7 +283,7 @@ export default function TabSeguimiento() {
 
       {/* TABLA DE ATRIBUCIÓN — Revenue y quien lo trae */}
       <SectionTitle>Atribucion de Revenue — Deals Won 2026</SectionTitle>
-      <div style={{ background: "white", borderRadius: 12, padding: 24, marginBottom: 24, overflowX: "auto" }}>
+      <div className="table-responsive" style={{ background: "white", borderRadius: 12, padding: 24, marginBottom: 24, overflowX: "auto" }}>
         {stats.wonAsOriginador.length > 0 || stats.wonAsCerrador.length > 0 || stats.wonAsBO.length > 0 ? (
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
             <thead>
@@ -344,7 +344,7 @@ export default function TabSeguimiento() {
 
       {/* Oportunidades en pipeline */}
       <SectionTitle>Oportunidades en Pipeline</SectionTitle>
-      <div style={{ background: "white", borderRadius: 12, padding: 24, marginBottom: 24, overflowX: "auto" }}>
+      <div className="table-responsive" style={{ background: "white", borderRadius: 12, padding: 24, marginBottom: 24, overflowX: "auto" }}>
         {/* Mini badges de stage summary */}
         <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
           {Object.entries(stats.pipelineByStage).sort((a, b) => (STAGE_ORDER[a[0]] || 99) - (STAGE_ORDER[b[0]] || 99)).map(([stage, data]) => (

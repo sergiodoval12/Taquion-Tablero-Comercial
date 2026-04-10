@@ -59,7 +59,7 @@ export default function TabCuentas() {
         <KPICard title="Industrias" value={Object.keys(industryCount).length} color={COLORS.purple} />
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 24, marginBottom: 24 }}>
+      <div className="grid-2col-even">
         <div style={{ background: "white", borderRadius: 12, padding: 24 }}>
           <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 16 }}>Distribucion por Industria</h3>
           <ResponsiveContainer width="100%" height={220}>
@@ -112,7 +112,7 @@ export default function TabCuentas() {
           {tipos.map(t => <option key={t} value={t}>{t}</option>)}
         </select>
       </div>
-      <div style={{ background: "white", borderRadius: 12, padding: 24, overflowX: "auto" }}>
+      <div className="table-responsive" style={{ background: "white", borderRadius: 12, padding: 24, overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
           <thead>
             <tr style={{ borderBottom: "2px solid " + COLORS.dark }}>

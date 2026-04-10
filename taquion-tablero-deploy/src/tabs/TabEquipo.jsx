@@ -50,7 +50,7 @@ export default function TabEquipo() {
 
   return (
     <div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 24 }}>
+      <div className="kpi-grid">
         <KPICard title="Target mensual / comercial" value="$50M" subtitle="$150M acumulado Q1" color={COLORS.blue} />
         <KPICard title="Won Q1 Total" value={fmtM(WON_2026.reduce((s, w) => s + w.total, 0))} color={COLORS.green} />
         <KPICard title="Opps sin cerrador asignado" value={OPPORTUNITIES.filter(o => o.cerrador === "Sin asignar").length} subtitle={"De " + OPPORTUNITIES.length + " oportunidades activas"} color={COLORS.warning} />
@@ -102,7 +102,7 @@ export default function TabEquipo() {
 
       <SectionTitle>Modelo Comercial — Pool 20% por Oportunidad</SectionTitle>
       <div style={{ background: "white", borderRadius: 12, padding: 24, marginBottom: 24 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
+        <div className="kpi-grid" style={{ marginBottom: 24 }}>
           {[
             { role: "Marketing Taquion", pct: "2.5%", desc: "Residualidad compania (no distribuible)", color: COLORS.gray },
             { role: "Business Owner", pct: "2.5%", desc: "Ownership de vertical (BO of Record)", color: COLORS.purple },
@@ -118,7 +118,7 @@ export default function TabEquipo() {
         </div>
 
         <h4 style={{ fontSize: 13, fontWeight: 600, marginBottom: 12, color: COLORS.dark }}>Casuisticas de Asignacion</h4>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <div className="grid-2col-even">
           {[
             { caso: "BO origina y cierra", detalle: "Mktg 2.5% + BO 2.5% + Performance 15% = 20%", color: COLORS.accent },
             { caso: "GC origina y cierra", detalle: "7.5% comision (sin tope salarial)", color: COLORS.blue },
@@ -135,7 +135,7 @@ export default function TabEquipo() {
 
       <SectionTitle>Esquema GC — Compensacion</SectionTitle>
       <div style={{ background: "white", borderRadius: 12, padding: 24 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 16 }}>
+        <div className="kpi-grid" style={{ marginBottom: 16 }}>
           <div style={{ padding: 12, background: COLORS.blue + "08", borderRadius: 8, textAlign: "center" }}>
             <div style={{ fontSize: 20, fontWeight: 800, color: COLORS.blue }}>$2.5M</div>
             <div style={{ fontSize: 11, fontWeight: 600 }}>Fijo Mensual</div>

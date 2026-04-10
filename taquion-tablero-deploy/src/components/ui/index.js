@@ -4,3 +4,4 @@ export { default as Badge } from "./Badge.jsx";
 export { default as StageIndicator } from "./StageIndicator.jsx";
 export { default as SectionTitle } from "./SectionTitle.jsx";
 export { default as CustomTooltip } from "./CustomTooltip.jsx";
+export { default as DetailTooltip } from "./DetailTooltip.jsx";

@@ -22,7 +22,7 @@ export default function TabAlertas() {
 
   return (
     <div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
+      <div className="kpi-grid">
         <KPICard title="Opps Upselling" value={upsellingOpps.length} subtitle={fmtM(upsellingValue)} color={COLORS.teal} />
         <KPICard title="Opps Nuevas" value={newOpps.length} subtitle={fmtM(newValue)} color={COLORS.purple} />
         <KPICard title="Forecast/Commit sin cerrador" value={noCerrador.length} subtitle="Requiere accion inmediata" color={COLORS.red} />
@@ -63,10 +63,10 @@ export default function TabAlertas() {
         </div>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+      <div className="grid-2col-even">
         <div>
           <SectionTitle>{"Oportunidades de Upselling (" + upsellingOpps.length + ")"}</SectionTitle>
-          <div style={{ background: "white", borderRadius: 12, padding: 16, overflowX: "auto" }}>
+          <div className="table-responsive" style={{ background: "white", borderRadius: 12, padding: 16, overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
               <thead>
                 <tr style={{ borderBottom: "2px solid " + COLORS.teal }}>

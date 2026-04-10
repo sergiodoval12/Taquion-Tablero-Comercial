@@ -1,0 +1,187 @@
+/* ── Mobile responsive overrides ── */
+
+/* KPI grids: 4-col → 2-col on tablet → 1-col on phone */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.kpi-grid-5 {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+/* 2-column layout sections */
+.grid-2col {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+}
+
+.grid-2col-even {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+/* Main content area */
+.main-content {
+  padding: 24px 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Header bar */
+.header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 32px;
+}
+
+.header-tabs {
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  padding: 0 32px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Status bar */
+.status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 32px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Table wrapper */
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Filter row */
+.filter-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+/* Login card */
+.login-card {
+  width: 400px;
+  padding: 48px;
+}
+
+/* ── Tablet (≤ 900px) ── */
+@media (max-width: 900px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .kpi-grid-5 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .grid-2col,
+  .grid-2col-even {
+    grid-template-columns: 1fr !important;
+  }
+
+  .main-content {
+    padding: 16px !important;
+  }
+
+  .header-bar {
+    padding: 12px 16px !important;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .header-tabs {
+    padding: 0 8px !important;
+  }
+
+  .header-tabs button {
+    padding: 10px 12px !important;
+    font-size: 12px !important;
+  }
+
+  .status-bar {
+    padding: 6px 16px !important;
+    font-size: 10px !important;
+  }
+}
+
+/* ── Phone (≤ 600px) ── */
+@media (max-width: 600px) {
+  .kpi-grid,
+  .kpi-grid-5 {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .main-content {
+    padding: 10px !important;
+  }
+
+  .header-bar {
+    padding: 10px 12px !important;
+  }
+
+  .header-bar .header-title {
+    font-size: 20px !important;
+  }
+
+  .header-bar .header-subtitle {
+    display: none;
+  }
+
+  .header-bar .header-meta {
+    display: none;
+  }
+
+  .header-tabs {
+    padding: 0 4px !important;
+  }
+
+  .header-tabs button {
+    padding: 8px 8px !important;
+    font-size: 11px !important;
+  }
+
+  .status-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 6px 12px !important;
+  }
+
+  .login-card {
+    width: calc(100vw - 32px) !important;
+    padding: 24px !important;
+  }
+
+  /* Smaller chart heights on phone */
+  .recharts-responsive-container {
+    min-height: 200px;
+  }
+
+  /* Table font size */
+  .table-responsive table {
+    font-size: 11px !important;
+  }
+
+  .table-responsive th,
+  .table-responsive td {
+    padding: 4px !important;
+  }
+}

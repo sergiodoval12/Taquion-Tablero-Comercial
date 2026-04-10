@@ -10,7 +10,7 @@ function DataStatusBar() {
   const { loading, error, source, updatedAt, refresh } = useData();
 
   return (
-    <div style={{
+    <div className="status-bar" style={{
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",
@@ -68,7 +68,7 @@ function Dashboard() {
       <Header activeTab={activeTab} setActiveTab={setActiveTab} onLogout={() => {}} />
       <DataStatusBar />
 
-      <div style={{ padding: "24px 32px", maxWidth: 1200, margin: "0 auto" }}>
+      <div className="main-content" style={{ padding: "24px 32px", maxWidth: 1200, margin: "0 auto" }}>
         {activeTab === "resumen" && <TabResumen />}
         {activeTab === "revenue" && <TabRevenue />}
         {activeTab === "seguimiento" && <TabSeguimiento />}

@@ -2,7 +2,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { COLORS, STAGE_COLORS } from "../data/constants.js";
 import { useData } from "../data/DataProvider.jsx";
 import { fmtM } from "../utils/formatters.js";
-import { KPICard, SectionTitle, CustomTooltip } from "../components/ui/index.js";
+import { KPICard, SectionTitle, CustomTooltip, DetailTooltip } from "../components/ui/index.js";
 
 export default function TabResumen() {
   const { revenue: REVENUE_2026, opportunities: OPPORTUNITIES, accounts: CUENTAS_ACTIVAS } = useData();
@@ -31,12 +31,23 @@ export default function TabResumen() {
 
   const industryMap = {};
   OPPORTUNITIES.forEach(o => {
-    if (!industryMap[o.industria]) industryMap[o.industria] = { count: 0, value: 0 };
+    if (!industryMap[o.industria]) industryMap[o.industria] = { count: 0, value: 0, deals: [] };
     industryMap[o.industria].count++;
     industryMap[o.industria].value += o.total;
+    industryMap[o.industria].deals.push({ nombre: o.nombre, total: o.total, stage: o.stage });
   });
+  const MAX_DETAIL = 6;
   const industryData = Object.entries(industryMap)
-    .map(([name, d]) => ({ name: name.length > 20 ? name.slice(0, 18) + "..." : name, value: d.value, count: d.count }))
+    .map(([name, d]) => {
+      const sorted = d.deals.sort((a, b) => b.total - a.total);
+      return {
+        name: name.length > 20 ? name.slice(0, 18) + "..." : name,
+        value: d.value,
+        count: d.count,
+        _details: sorted.slice(0, MAX_DETAIL),
+        _moreCount: Math.max(0, sorted.length - MAX_DETAIL),
+      };
+    })
     .sort((a, b) => b.value - a.value)
     .slice(0, 8);
 
@@ -45,14 +56,14 @@ export default function TabResumen() {
 
   return (
     <div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
+      <div className="kpi-grid">
         <KPICard title="Revenue Q1 2026 (Real)" value={fmtM(q1Real)} subtitle={q1Target > 0 ? (q1Real / q1Target * 100).toFixed(0) + "% del target Q1" : "Target pendiente"} color={COLORS.green} />
         <KPICard title="Revenue Anual Won" value={fmtM(annualWon)} subtitle={annualTarget > 0 ? (annualWon / annualTarget * 100).toFixed(0) + "% de " + fmtM(annualTarget) + " target" : "Target pendiente"} color={annualWon > annualTarget ? COLORS.green : COLORS.warning} />
         <KPICard title={"Pipeline Total (" + OPPORTUNITIES.length + " opps)"} value={fmtM(totalPipeline)} subtitle="Commit a Pipeline activo" color={COLORS.blue} />
         <KPICard title="Cuentas Activas" value={CUENTAS_ACTIVAS.length} subtitle={upsellingCount + " opps upselling | " + newCount + " nuevas"} color={COLORS.purple} />
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 24 }}>
+      <div className="grid-2col">
         <div style={{ background: "white", borderRadius: 12, padding: 24 }}>
           <h3 style={{ fontSize: 15, fontWeight: 600, color: COLORS.dark, marginBottom: 16 }}>Revenue Mensual 2026 vs Target vs 2025</h3>
           <ResponsiveContainer width="100%" height={280}>
@@ -110,8 +121,8 @@ export default function TabResumen() {
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis type="number" tickFormatter={fmtM} tick={{ fontSize: 11 }} />
             <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={140} />
-            <Tooltip formatter={(v) => fmtM(v)} />
-            <Bar dataKey="value" name="Valor" fill={COLORS.accent} radius={[0, 4, 4, 0]} />
+            <Tooltip content={<DetailTooltip />} />
+            <Bar dataKey="value" name="Valor Pipeline" fill={COLORS.accent} radius={[0, 4, 4, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
