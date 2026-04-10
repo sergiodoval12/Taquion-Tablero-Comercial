@@ -13,11 +13,8 @@ export default function TabResumen() {
   const annualWon = REVENUE_2026.reduce((s, m) => s + (m.real || 0), 0);
   const annualTarget = REVENUE_2026.reduce((s, m) => s + m.target, 0);
 
-  // Chart data: siempre mostrar projected (Monto Mensual Ajustado) para igualar Notion
-  const chartData = REVENUE_2026.map(m => ({
-    ...m,
-    display: m.projected || 0,
-  }));
+  // Chart data: solo Won (real) por mes
+  const chartData = REVENUE_2026;
 
   const commitValue = OPPORTUNITIES.filter(o => o.stage === "Commit").reduce((s, o) => s + o.total, 0);
   const forecastValue = OPPORTUNITIES.filter(o => o.stage === "Forecast").reduce((s, o) => s + o.total, 0);
@@ -65,12 +62,12 @@ export default function TabResumen() {
               <YAxis tick={{ fontSize: 11 }} tickFormatter={fmtM} />
               <Tooltip content={<CustomTooltip />} />
               <Legend wrapperStyle={{ fontSize: 11 }} />
-              <Bar dataKey="display" name="2026 Ponderado" fill={COLORS.accent} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="real" name="2026 Real (Won)" fill={COLORS.accent} radius={[4, 4, 0, 0]} />
               <Bar dataKey="target" name="Target" fill={COLORS.lightGray} radius={[4, 4, 0, 0]} />
               <Bar dataKey="r2025" name="2025 Real" fill={COLORS.blue + "60"} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
-          <div style={{ fontSize: 11, color: COLORS.gray, marginTop: 4 }}>* Ponderado = Won 100% + Forecast 75% + Upside 40% (Monto Mensual Ajustado de Notion)</div>
+          <div style={{ fontSize: 11, color: COLORS.gray, marginTop: 4 }}>* Solo revenue de deals Won (Monto Mensual)</div>
         </div>
 
         <div>
