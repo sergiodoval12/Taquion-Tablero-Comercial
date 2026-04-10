@@ -103,6 +103,39 @@ export default async (req: Request, context: Context) => {
       return jsonResponse({ samples, total: data.results?.length });
     }
 
+    // Debug 3: breakdown of January 2026 Real records to find duplicates
+    if (url.searchParams.get("debug") === "3") {
+      const filter = {
+        and: [
+          { property: "Año Facturación", select: { equals: "2026" } },
+          { property: "Tipo", select: { equals: "Real" } },
+          { property: "Mes Facturación", select: { equals: "1. Enero" } },
+        ],
+      };
+      const pages = await queryAll(filter, 20000);
+      const details = pages.map((p: any) => ({
+        titulo: getProp(p, "FACTURACIÓN"),
+        monto: getProp(p, "Monto Mensual"),
+        moneda: getProp(p, "Moneda"),
+        compania: getProp(p, "Compañía"),
+        opp: getProp(p, "Nombre Oportunidad"),
+        orgFormula: getProp(p, "Organización Fórmula"),
+        estadoOpp: getProp(p, "Estado Oportunidad Fórmula"),
+      }));
+      const totalARS = details.filter(d => d.moneda === "ARS").reduce((s, d) => s + (d.monto || 0), 0);
+      const byCompania: Record<string, number> = {};
+      for (const d of details) {
+        const key = d.compania || "(null)";
+        byCompania[key] = (byCompania[key] || 0) + (d.monto || 0);
+      }
+      return jsonResponse({
+        totalRecords: pages.length,
+        totalARS,
+        byCompania,
+        details: details.sort((a: any, b: any) => (b.monto || 0) - (a.monto || 0)),
+      });
+    }
+
     // ── Main query: 3 parallel targeted queries ──
     // Each compound filter = Año + Tipo → much fewer records per query
     const filter2026Real = {
