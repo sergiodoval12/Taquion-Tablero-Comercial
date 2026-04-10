@@ -15,7 +15,7 @@ function DataStatusBar() {
       alignItems: "center",
       justifyContent: "space-between",
       padding: "6px 32px",
-      background: source === "api" ? "#e8f5e9" : error ? "#fff3e0" : "#e3f2fd",
+      background: source === "api" ? "#e8f5e9" : source === "partial" ? "#e3f2fd" : error ? "#fff3e0" : "#e3f2fd",
       fontSize: 11,
       color: COLORS.gray,
       borderBottom: "1px solid " + COLORS.lightGray,
@@ -30,6 +30,8 @@ function DataStatusBar() {
           <span>Cargando datos desde Notion...</span>
         ) : source === "api" ? (
           <span>Datos en vivo desde Notion CRM</span>
+        ) : source === "partial" ? (
+          <span>Datos parciales desde Notion — {error}</span>
         ) : (
           <span>Datos locales (fallback) — {error || "API no disponible"}</span>
         )}

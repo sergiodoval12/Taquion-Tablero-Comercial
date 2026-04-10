@@ -14,7 +14,7 @@ export function useData() {
 }
 
 // Fetch with timeout and error handling
-async function fetchAPI(endpoint, timeoutMs = 15000) {
+async function fetchAPI(endpoint, timeoutMs = 45000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -23,6 +23,16 @@ async function fetchAPI(endpoint, timeoutMs = 15000) {
     return await res.json();
   } finally {
     clearTimeout(timer);
+  }
+}
+
+// Try to fetch, return null on failure (don't block other APIs)
+async function safeFetch(endpoint) {
+  try {
+    return await fetchAPI(endpoint);
+  } catch (err) {
+    console.warn(`[DataProvider] ${endpoint} failed:`, err.message);
+    return null;
   }
 }
 
@@ -40,40 +50,55 @@ export default function DataProvider({ children }) {
     setLoading(true);
     setError(null);
 
-    try {
-      const [revData, oppData, accData] = await Promise.all([
-        fetchAPI("/api/revenue"),
-        fetchAPI("/api/opportunities"),
-        fetchAPI("/api/accounts"),
-      ]);
+    // Fetch all 3 APIs in parallel — each one independently
+    const [revData, oppData, accData] = await Promise.all([
+      safeFetch("/api/revenue"),
+      safeFetch("/api/opportunities"),
+      safeFetch("/api/accounts"),
+    ]);
 
-      // Revenue: API returns { revenue: [...], updatedAt }
-      if (revData?.revenue?.length > 0) {
-        setRevenue(revData.revenue);
-      }
+    let anySuccess = false;
+    const errors = [];
 
-      // Opportunities: API returns { opportunities: [...], won2026: [...], updatedAt }
-      if (oppData?.opportunities?.length > 0) {
-        setOpportunities(oppData.opportunities);
-      }
-      if (oppData?.won2026?.length > 0) {
-        setWon2026(oppData.won2026);
-      }
-
-      // Accounts: API returns { accounts: [...], updatedAt }
-      if (accData?.accounts?.length > 0) {
-        setAccounts(accData.accounts);
-      }
-
-      setUpdatedAt(revData?.updatedAt || oppData?.updatedAt || new Date().toISOString());
-      setSource("api");
-    } catch (err) {
-      console.warn("Failed to fetch live data, using fallback:", err.message);
-      setError(err.message);
-      setSource("local");
-    } finally {
-      setLoading(false);
+    // Revenue: API returns { revenue: [...], updatedAt }
+    if (revData?.revenue?.length > 0) {
+      setRevenue(revData.revenue);
+      anySuccess = true;
+    } else if (revData === null) {
+      errors.push("revenue");
     }
+
+    // Opportunities: API returns { opportunities: [...], won2026: [...], updatedAt }
+    if (oppData?.opportunities?.length > 0) {
+      setOpportunities(oppData.opportunities);
+      anySuccess = true;
+    } else if (oppData === null) {
+      errors.push("opportunities");
+    }
+    if (oppData?.won2026?.length > 0) {
+      setWon2026(oppData.won2026);
+    }
+
+    // Accounts: API returns { accounts: [...], updatedAt }
+    if (accData?.accounts?.length > 0) {
+      setAccounts(accData.accounts);
+      anySuccess = true;
+    } else if (accData === null) {
+      errors.push("accounts");
+    }
+
+    if (anySuccess) {
+      setUpdatedAt(revData?.updatedAt || oppData?.updatedAt || accData?.updatedAt || new Date().toISOString());
+      setSource(errors.length > 0 ? "partial" : "api");
+      if (errors.length > 0) {
+        setError(`Parcial — falló: ${errors.join(", ")}`);
+      }
+    } else {
+      setError("No se pudo conectar con Notion");
+      setSource("local");
+    }
+
+    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -90,7 +115,7 @@ export default function DataProvider({ children }) {
     loading,
     error,
     updatedAt,
-    source, // "api" or "local"
+    source, // "api" | "partial" | "local"
     refresh,
   };
 
