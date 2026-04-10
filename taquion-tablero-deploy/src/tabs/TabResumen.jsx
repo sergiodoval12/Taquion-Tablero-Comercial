@@ -9,8 +9,15 @@ export default function TabResumen() {
 
   const q1Real = REVENUE_2026.slice(0, 3).reduce((s, m) => s + m.real, 0);
   const q1Target = REVENUE_2026.slice(0, 3).reduce((s, m) => s + m.target, 0);
-  const projected = REVENUE_2026.reduce((s, m) => s + m.real, 0);
+  // Proyección anual: para meses pasados usa real, para futuros usa projected (probability-weighted)
+  const annualProjected = REVENUE_2026.reduce((s, m) => s + (m.isFuture ? (m.projected || 0) : m.real), 0);
   const annualTarget = REVENUE_2026.reduce((s, m) => s + m.target, 0);
+
+  // Chart data: merge real + projected into one display value
+  const chartData = REVENUE_2026.map(m => ({
+    ...m,
+    display: m.isFuture ? (m.projected || 0) : m.real,
+  }));
 
   const commitValue = OPPORTUNITIES.filter(o => o.stage === "Commit").reduce((s, o) => s + o.total, 0);
   const forecastValue = OPPORTUNITIES.filter(o => o.stage === "Forecast").reduce((s, o) => s + o.total, 0);
@@ -43,7 +50,7 @@ export default function TabResumen() {
     <div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
         <KPICard title="Revenue Q1 2026 (Real)" value={fmtM(q1Real)} subtitle={q1Target > 0 ? (q1Real / q1Target * 100).toFixed(0) + "% del target Q1" : "Target pendiente"} color={COLORS.green} />
-        <KPICard title="Proyeccion Anual" value={fmtM(projected)} subtitle={annualTarget > 0 ? (projected / annualTarget * 100).toFixed(0) + "% de " + fmtM(annualTarget) + " target" : "Target pendiente"} color={projected > annualTarget ? COLORS.green : COLORS.warning} />
+        <KPICard title="Proyeccion Anual" value={fmtM(annualProjected)} subtitle={annualTarget > 0 ? (annualProjected / annualTarget * 100).toFixed(0) + "% de " + fmtM(annualTarget) + " target" : "Target pendiente"} color={annualProjected > annualTarget ? COLORS.green : COLORS.warning} />
         <KPICard title={"Pipeline Total (" + OPPORTUNITIES.length + " opps)"} value={fmtM(totalPipeline)} subtitle="Commit a Pipeline activo" color={COLORS.blue} />
         <KPICard title="Cuentas Activas" value={CUENTAS_ACTIVAS.length} subtitle={upsellingCount + " opps upselling | " + newCount + " nuevas"} color={COLORS.purple} />
       </div>
@@ -52,13 +59,13 @@ export default function TabResumen() {
         <div style={{ background: "white", borderRadius: 12, padding: 24 }}>
           <h3 style={{ fontSize: 15, fontWeight: 600, color: COLORS.dark, marginBottom: 16 }}>Revenue Mensual 2026 vs Target vs 2025</h3>
           <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={REVENUE_2026}>
+            <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="mes" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} tickFormatter={fmtM} />
               <Tooltip content={<CustomTooltip />} />
               <Legend wrapperStyle={{ fontSize: 11 }} />
-              <Bar dataKey="real" name="2026 Real/Proj" fill={COLORS.accent} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="display" name="2026 Real/Proj" fill={COLORS.accent} radius={[4, 4, 0, 0]} />
               <Bar dataKey="target" name="Target" fill={COLORS.lightGray} radius={[4, 4, 0, 0]} />
               <Bar dataKey="r2025" name="2025 Real" fill={COLORS.blue + "60"} radius={[4, 4, 0, 0]} />
             </BarChart>

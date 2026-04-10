@@ -70,6 +70,7 @@ async function queryAll(filter: any, deadlineMs: number): Promise<any[]> {
 
 interface MonthData {
   real: number;
+  projected: number;
   target: number;
   r2025: number;
 }
@@ -166,48 +167,53 @@ export default async (req: Request, context: Context) => {
       ],
     };
 
-    // ALL in one parallel batch — each month query = 1 page (no pagination), completes in ~3s
-    // Only query months up to current month (future months have no Real data)
+    // Query ALL 12 months in parallel — each = 1 page (no pagination), ~3s total
     const currentMonth = new Date().getMonth(); // 0-indexed, April = 3
-    const activeMonths = MONTHS.slice(0, currentMonth + 1); // Ene through current month
 
     const results = await Promise.all([
-      ...activeMonths.map(m => queryAll(monthRealFilter(m), 8000).catch(() => [] as any[])),
+      ...MONTHS.map(m => queryAll(monthRealFilter(m), 8000).catch(() => [] as any[])),
       queryAll(filterTarget26, 8000).catch(() => [] as any[]),
       queryAll(filter2025Real, 8000).catch(() => [] as any[]),
     ]);
 
-    // Last 2 entries are target26 and real25
-    const real26 = results.slice(0, activeMonths.length).flat();
-    const target26 = results[activeMonths.length];
-    const real25 = results[activeMonths.length + 1];
+    const real26 = results.slice(0, 12).flat();
+    const target26 = results[12];
+    const real25 = results[13];
 
     // ── Aggregate ──
     const data2026: Record<string, MonthData> = {};
     const industryRevenue: Record<string, number> = {};
 
     for (const m of Object.values(MONTH_MAP)) {
-      if (!data2026[m]) data2026[m] = { real: 0, target: 0, r2025: 0 };
+      if (!data2026[m]) data2026[m] = { real: 0, projected: 0, target: 0, r2025: 0 };
     }
 
-    // Process 2026 Real
-    // Logic verified against Notion view: only count Won deals, use raw Monto Mensual
-    // Include ALL companies (Taquion, Lumos, null) — Notion view includes all
-    // Verified: Won-only January records sum to exactly 168,126,000 matching hardcoded 168,133,169
+    // Process 2026 Real — two passes:
+    // 1. Won deals with raw Monto Mensual = actual revenue (for past months)
+    // 2. ALL deals with Monto Mensual Ajustado = projected revenue (for future months)
+    const currentMonthNum = currentMonth + 1; // 1-indexed
     for (const page of real26) {
       const mesFact = getProp(page, "Mes Facturación") || "";
       const monto = getProp(page, "Monto Mensual") || 0;
+      const montoAjustado = getProp(page, "Monto Mensual Ajustado") || 0;
       const estadoOpp = getProp(page, "Estado Oportunidad Fórmula");
       const industria = getProp(page, "Industria Fórmula") || "";
       const mesShort = MONTH_MAP[mesFact];
-      if (!mesShort || !monto) continue;
+      if (!mesShort) continue;
 
-      // Only count Won opportunities (matches Notion "Real VS Target" view)
-      if (estadoOpp !== "Won") continue;
+      const monthIdx = MONTH_ORDER[mesShort]; // 1-indexed
 
-      data2026[mesShort].real += monto;
-      if (industria) {
-        industryRevenue[industria] = (industryRevenue[industria] || 0) + monto;
+      // Projected: ALL deals weighted by probability (Monto Mensual Ajustado)
+      if (montoAjustado) {
+        data2026[mesShort].projected += montoAjustado;
+      }
+
+      // Real: only Won deals (actual billed revenue)
+      if (estadoOpp === "Won" && monto) {
+        data2026[mesShort].real += monto;
+        if (industria) {
+          industryRevenue[industria] = (industryRevenue[industria] || 0) + monto;
+        }
       }
     }
 
@@ -234,15 +240,15 @@ export default async (req: Request, context: Context) => {
     }
 
     // Build sorted arrays
-    const currentMonthNum = currentMonth + 1; // 1-indexed for comparison with MONTH_ORDER
     const revenue = Object.entries(data2026)
       .filter(([mes]) => MONTH_ORDER[mes])
       .map(([mes, d]) => ({
         mes,
         real: Math.round(d.real),
+        projected: Math.round(d.projected),
         target: Math.round(d.target),
         r2025: Math.round(d.r2025),
-        projected: MONTH_ORDER[mes] > currentMonthNum,
+        isFuture: MONTH_ORDER[mes] > currentMonthNum,
       }))
       .sort((a, b) => MONTH_ORDER[a.mes] - MONTH_ORDER[b.mes]);
 
@@ -253,7 +259,7 @@ export default async (req: Request, context: Context) => {
     return jsonResponse({
       revenue,
       byIndustry,
-      records: { real26: real26.length, target26: target26.length, real25: real25.length, months: activeMonths.length },
+      records: { real26: real26.length, target26: target26.length, real25: real25.length },
       updatedAt: new Date().toISOString(),
     });
   } catch (err: any) {
