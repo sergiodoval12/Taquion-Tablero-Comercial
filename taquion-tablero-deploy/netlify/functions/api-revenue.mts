@@ -28,14 +28,53 @@ export default async (req: Request, context: Context) => {
   try {
     const url = new URL(req.url);
 
-    // Debug mode: return schema of first page
+    // Debug mode: return database schema (no records, instant)
     if (url.searchParams.get("debug") === "1") {
-      const pages = await notionQueryAll(DB_IDS.FORECAST, undefined, undefined);
-      if (pages.length > 0) {
-        const schema = getAllProps(pages[0]);
-        return jsonResponse({ schema, totalPages: pages.length });
+      const apiKey = Netlify.env.get("NOTION_API_KEY");
+      const dbRes = await fetch(`https://api.notion.com/v1/databases/${DB_IDS.FORECAST}`, {
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Notion-Version": "2022-06-28",
+        },
+      });
+      const dbMeta = await dbRes.json();
+      // Extract property names and types
+      const schema: Record<string, any> = {};
+      if (dbMeta.properties) {
+        for (const [name, prop] of Object.entries(dbMeta.properties) as any) {
+          schema[name] = { type: prop.type };
+          if (prop.type === "select" && prop.select?.options) {
+            schema[name].options = prop.select.options.map((o: any) => o.name);
+          }
+          if (prop.type === "number") {
+            schema[name].format = prop.number?.format;
+          }
+          if (prop.type === "formula") {
+            schema[name].expression = prop.formula?.expression;
+          }
+        }
       }
-      return jsonResponse({ schema: null, totalPages: 0 });
+      return jsonResponse({ schema, title: dbMeta.title?.map((t: any) => t.plain_text).join("") });
+    }
+
+    // Debug mode 2: return first record's values
+    if (url.searchParams.get("debug") === "2") {
+      const apiKey = Netlify.env.get("NOTION_API_KEY");
+      const qRes = await fetch(`https://api.notion.com/v1/databases/${DB_IDS.FORECAST}/query`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Notion-Version": "2022-06-28",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ page_size: 3 }),
+      });
+      const qData = await qRes.json();
+      if (qData.results?.length > 0) {
+        const samples = qData.results.map((page: any) => getAllProps(page));
+        return jsonResponse({ samples, total: qData.results.length });
+      }
+      return jsonResponse({ samples: [], total: 0 });
     }
 
     // Fetch only 2025 and 2026 records to avoid timeout
