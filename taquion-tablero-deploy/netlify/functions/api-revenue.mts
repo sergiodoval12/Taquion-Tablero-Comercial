@@ -23,7 +23,7 @@ async function queryNotion(filter: any, cursor?: string): Promise<any> {
   if (cursor) body.start_cursor = cursor;
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 18000);
+  const timer = setTimeout(() => controller.abort(), 8000);
 
   try {
     const res = await fetch(
@@ -136,19 +136,10 @@ export default async (req: Request, context: Context) => {
       });
     }
 
-    // ── Main query: 3 parallel targeted queries ──
-    // Each compound filter = Año + Tipo → much fewer records per query
-    const filter2026Real = {
-      and: [
-        { property: "Año Facturación", select: { equals: "2026" } },
-        { property: "Tipo", select: { equals: "Real" } },
-      ],
-    };
-    const filter2026Target = {
-      and: [
-        { property: "Año Facturación", select: { equals: "2026" } },
-        { property: "Tipo", select: { equals: "Target" } },
-      ],
+    // ── Main query: 2 parallel queries (combined 2026 = fewer pagination chains) ──
+    // Combine 2026 Real + Target in one query, split by Tipo client-side
+    const filter2026All = {
+      property: "Año Facturación", select: { equals: "2026" },
     };
     const filter2025Real = {
       and: [
@@ -157,12 +148,15 @@ export default async (req: Request, context: Context) => {
       ],
     };
 
-    // Run all 3 in parallel, each with 40s budget (within 60s function limit since parallel)
-    const [real26, target26, real25] = await Promise.all([
-      queryAll(filter2026Real, 40000),
-      queryAll(filter2026Target, 40000),
-      queryAll(filter2025Real, 40000),
+    // 2 parallel queries instead of 3 — faster pagination, fits in 10s Netlify timeout
+    const [all2026, real25] = await Promise.all([
+      queryAll(filter2026All, 9000),
+      queryAll(filter2025Real, 9000),
     ]);
+
+    // Split 2026 by Tipo client-side
+    const real26 = all2026.filter((p: any) => getProp(p, "Tipo") === "Real");
+    const target26 = all2026.filter((p: any) => getProp(p, "Tipo") === "Target");
 
     // ── Aggregate ──
     const data2026: Record<string, MonthData> = {};
@@ -235,7 +229,7 @@ export default async (req: Request, context: Context) => {
     return jsonResponse({
       revenue,
       byIndustry,
-      records: { real26: real26.length, target26: target26.length, real25: real25.length },
+      records: { all2026: all2026.length, real26: real26.length, target26: target26.length, real25: real25.length },
       updatedAt: new Date().toISOString(),
     });
   } catch (err: any) {

@@ -89,10 +89,10 @@ export default async (req: Request, context: Context) => {
         total: getProp(page, "$ Total Estimado (Sin IVA)") || 0,
         industria: industrias.length > 0 ? industrias[0] : "Sin clasificar",
         upselling: getProp(page, "Upselling") === true,
-        cerrador: extractPerson(page, "Cerrador de Oportunidad", "Cerrador"),
-        originador: extractPerson(page, "Originador de Oportunidad", "Originador", "Generador de Oportunidad", "Generador"),
-        bo: extractPerson(page, "Business Owner", "BO", "Owner de Vertical"),
-        duracion: getPropAny(page, "Duración", "Duracion", "Duration") || "",
+        cerrador: extractPerson(page, "Cerrador de Oportunidad"),
+        originador: extractPerson(page, "Orginador del Lead"),
+        bo: extractPerson(page, "Business Owner"),
+        duracion: getProp(page, "Duración") || "",
         velocityDays,
       };
     });
@@ -117,9 +117,9 @@ export default async (req: Request, context: Context) => {
       return {
         nombre: getProp(page, "Nombre Oportunidad") || "Sin nombre",
         total: getProp(page, "$ Total Estimado (Sin IVA)") || 0,
-        cerrador: extractPerson(page, "Cerrador de Oportunidad", "Cerrador"),
-        originador: extractPerson(page, "Originador de Oportunidad", "Originador", "Generador de Oportunidad", "Generador"),
-        bo: extractPerson(page, "Business Owner", "BO", "Owner de Vertical"),
+        cerrador: extractPerson(page, "Cerrador de Oportunidad"),
+        originador: extractPerson(page, "Orginador del Lead"),
+        bo: extractPerson(page, "Business Owner"),
         industria: industrias.length > 0 ? industrias[0] : "Sin clasificar",
         fecha,
       };
