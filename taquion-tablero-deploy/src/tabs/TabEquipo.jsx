@@ -10,11 +10,11 @@ export default function TabEquipo() {
   // Revenue originado (rol principal para la atribución general)
   const wonByOriginador = {};
   WON_2026.forEach(w => {
-    wonByOriginador[w.originador] = (wonByOriginador[w.originador] || 0) + w.total;
+    wonByOriginador[w.originador] = (wonByOriginador[w.originador] || 0) + (w.q1 || 0);
   });
   const wonByCerrador = {};
   WON_2026.forEach(w => {
-    wonByCerrador[w.cerrador] = (wonByCerrador[w.cerrador] || 0) + w.total;
+    wonByCerrador[w.cerrador] = (wonByCerrador[w.cerrador] || 0) + (w.q1 || 0);
   });
 
   const pipelineByPerson = {};

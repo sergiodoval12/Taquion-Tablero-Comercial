@@ -34,9 +34,10 @@ export default function TabSeguimiento() {
     const wonAsOriginador = WON_2026.filter(w => w.originador === selected);
     const wonAsBO = WON_2026.filter(w => w.bo === selected);
 
-    const revenueCerrador = wonAsCerrador.reduce((s, w) => s + w.total, 0);
-    const revenueOriginador = wonAsOriginador.reduce((s, w) => s + w.total, 0);
-    const revenueBO = wonAsBO.reduce((s, w) => s + w.total, 0);
+    // Use Q1 monthly revenue (not deal total) — matches company $533M Q1
+    const revenueCerrador = wonAsCerrador.reduce((s, w) => s + (w.q1 || 0), 0);
+    const revenueOriginador = wonAsOriginador.reduce((s, w) => s + (w.q1 || 0), 0);
+    const revenueBO = wonAsBO.reduce((s, w) => s + (w.q1 || 0), 0);
 
     // Pipeline opportunities donde participa
     const pipelineAsCerrador = OPPORTUNITIES.filter(o => o.cerrador === selected);
@@ -56,8 +57,9 @@ export default function TabSeguimiento() {
     // Won by industry
     const wonByIndustry = {};
     wonAsOriginador.forEach(w => {
-      if (w.total > 0) {
-        wonByIndustry[w.industria] = (wonByIndustry[w.industria] || 0) + w.total;
+      const val = w.q1 || w.total || 0;
+      if (val > 0) {
+        wonByIndustry[w.industria] = (wonByIndustry[w.industria] || 0) + val;
       }
     });
 
@@ -74,7 +76,7 @@ export default function TabSeguimiento() {
     wonAsCerrador.forEach(w => {
       const m = w.fecha.slice(5, 7);
       const label = { "01": "Ene", "02": "Feb", "03": "Mar", "04": "Abr" }[m] || m;
-      cumplimientoMensual[label] = (cumplimientoMensual[label] || 0) + w.total;
+      cumplimientoMensual[label] = (cumplimientoMensual[label] || 0) + (w.q1 || w.total || 0);
     });
 
     return {
@@ -82,7 +84,7 @@ export default function TabSeguimiento() {
       revenueCerrador, revenueOriginador, revenueBO,
       pipelineAsCerrador, pipelineAsOriginador, pipelineAsBO, pipelineAll,
       pipelineValue,
-      cuentasOriginadas, cuentasCerradas,
+      cuentasAM,
       wonByIndustry, pipelineByStage, cumplimientoMensual,
     };
   }, [selected]);
@@ -181,21 +183,21 @@ export default function TabSeguimiento() {
       {/* KPIs principales */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
         <KPICard
-          title="Revenue como Originador"
+          title="Revenue Q1 como Originador"
           value={fmtM(stats.revenueOriginador)}
-          subtitle={stats.wonAsOriginador.filter(w => w.total > 0).length + " deals originados"}
+          subtitle={stats.wonAsOriginador.filter(w => (w.q1 || w.total) > 0).length + " deals originados"}
           color={COLORS.green}
         />
         <KPICard
-          title="Revenue como Cerrador"
+          title="Revenue Q1 como Cerrador"
           value={fmtM(stats.revenueCerrador)}
-          subtitle={stats.wonAsCerrador.filter(w => w.total > 0).length + " deals cerrados"}
+          subtitle={stats.wonAsCerrador.filter(w => (w.q1 || w.total) > 0).length + " deals cerrados"}
           color={COLORS.blue}
         />
         <KPICard
-          title="Revenue como BO"
+          title="Revenue Q1 como BO"
           value={fmtM(stats.revenueBO)}
-          subtitle={stats.wonAsBO.filter(w => w.total > 0).length + " en su vertical"}
+          subtitle={stats.wonAsBO.filter(w => (w.q1 || w.total) > 0).length + " en su vertical"}
           color={COLORS.purple}
         />
         <KPICard
@@ -304,7 +306,7 @@ export default function TabSeguimiento() {
                 return allDeals.map((w, i) => (
                   <tr key={i} style={{ borderBottom: "1px solid " + COLORS.lightGray }}>
                     <td style={{ padding: 8, fontWeight: 500 }}>{w.nombre}</td>
-                    <td style={{ padding: 8, textAlign: "right", fontWeight: 600, color: w.total > 0 ? COLORS.green : COLORS.gray }}>{w.total > 0 ? fmtM(w.total) : "—"}</td>
+                    <td style={{ padding: 8, textAlign: "right", fontWeight: 600, color: (w.q1 || w.total) > 0 ? COLORS.green : COLORS.gray }}>{(w.q1 || w.total) > 0 ? fmtM(w.q1 || w.total) : "—"}</td>
                     <td style={{ padding: 8, fontSize: 11 }}>{w.industria}</td>
                     <td style={{ padding: 8, textAlign: "center" }}>
                       {w.originador === selected ? (

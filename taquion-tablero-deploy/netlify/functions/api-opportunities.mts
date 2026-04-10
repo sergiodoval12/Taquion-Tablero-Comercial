@@ -111,12 +111,21 @@ export default async (req: Request, context: Context) => {
     const won2026 = wonPages.map((page: any) => {
       const industrias = getProp(page, "Industrias") || [];
       const wonDate = getProp(page, "WON DATE") || "";
-      // Extract month from WON DATE (YYYY-MM-DD → YYYY-MM)
       const fecha = wonDate ? wonDate.slice(0, 7) : "";
+
+      // Monthly revenue from formula fields (matches Forecast DB monthly amounts)
+      const ene = getProp(page, "Enero") || 0;
+      const feb = getProp(page, "Febrero") || 0;
+      const mar = getProp(page, "Marzo") || 0;
+      const abr = getProp(page, "Abril") || 0;
+      const q1 = ene + feb + mar;
+      const ytd = q1 + abr;
 
       return {
         nombre: getProp(page, "Nombre Oportunidad") || "Sin nombre",
         total: getProp(page, "$ Total Estimado (Sin IVA)") || 0,
+        q1,
+        ytd,
         cerrador: extractPerson(page, "Cerrador de Oportunidad"),
         originador: extractPerson(page, "Orginador del Lead"),
         bo: extractPerson(page, "Business Owner"),
