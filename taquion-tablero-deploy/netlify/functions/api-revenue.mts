@@ -173,45 +173,46 @@ export default async (req: Request, context: Context) => {
     }
 
     // Process 2026 Real
+    // Use "Monto Mensual Ajustado" (Notion formula) instead of "Monto Mensual"
+    // This automatically zeroes out Lost/Nurturing deals and adjusts Forecast (75%) and Upside (40%)
+    // Exclude Lumos records to avoid duplicates (e.g. SUTERH appears as both Taquion + Lumos)
     for (const page of real26) {
       const mesFact = getProp(page, "Mes Facturación") || "";
-      const monto = getProp(page, "Monto Mensual") || 0;
-      const moneda = getProp(page, "Moneda") || "ARS";
+      const montoAjustado = getProp(page, "Monto Mensual Ajustado") || 0;
+      const compania = getProp(page, "Compañía");
       const industria = getProp(page, "Industria Fórmula") || "";
       const mesShort = MONTH_MAP[mesFact];
-      if (!mesShort || !monto) continue;
+      if (!mesShort || !montoAjustado) continue;
 
-      // Only count ARS (skip EUR/USD/BTC to avoid inflating totals)
-      if (moneda !== "ARS") continue;
+      // Exclude Lumos (duplicates Taquion records)
+      if (compania === "Lumos") continue;
 
-      data2026[mesShort].real += monto;
+      data2026[mesShort].real += montoAjustado;
       if (industria) {
-        industryRevenue[industria] = (industryRevenue[industria] || 0) + monto;
+        industryRevenue[industria] = (industryRevenue[industria] || 0) + montoAjustado;
       }
     }
 
-    // Process 2026 Target
+    // Process 2026 Target (use Monto Mensual — targets don't need adjustment)
     for (const page of target26) {
       const mesFact = getProp(page, "Mes Facturación") || "";
       const monto = getProp(page, "Monto Mensual") || 0;
-      const moneda = getProp(page, "Moneda") || "ARS";
       const mesShort = MONTH_MAP[mesFact];
       if (!mesShort || !monto) continue;
-      if (moneda !== "ARS") continue;
 
       data2026[mesShort].target += monto;
     }
 
-    // Process 2025 Real
+    // Process 2025 Real (use Monto Mensual Ajustado, exclude Lumos)
     for (const page of real25) {
       const mesFact = getProp(page, "Mes Facturación") || "";
-      const monto = getProp(page, "Monto Mensual") || 0;
-      const moneda = getProp(page, "Moneda") || "ARS";
+      const montoAjustado = getProp(page, "Monto Mensual Ajustado") || 0;
+      const compania = getProp(page, "Compañía");
       const mesShort = MONTH_MAP[mesFact];
-      if (!mesShort || !monto) continue;
-      if (moneda !== "ARS") continue;
+      if (!mesShort || !montoAjustado) continue;
+      if (compania === "Lumos") continue;
 
-      data2026[mesShort].r2025 += monto;
+      data2026[mesShort].r2025 += montoAjustado;
     }
 
     // Build sorted arrays
