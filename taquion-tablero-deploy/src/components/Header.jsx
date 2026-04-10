@@ -9,7 +9,7 @@ export default function Header({ activeTab, setActiveTab, onLogout }) {
           <span style={{ fontSize: 13, color: "rgba(255,255,255,0.6)" }}>Tablero del Director Comercial</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>Datos Notion CRM | 8 Abr 2026</span>
+          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>Datos Notion CRM | 9 Abr 2026</span>
           <button onClick={onLogout} style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", color: "white", padding: "6px 14px", borderRadius: 6, fontSize: 12, cursor: "pointer" }}>
             Salir
           </button>
