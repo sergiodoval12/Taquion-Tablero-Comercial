@@ -23,7 +23,7 @@ async function queryNotion(filter: any, cursor?: string): Promise<any> {
   if (cursor) body.start_cursor = cursor;
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 12000);
+  const timer = setTimeout(() => controller.abort(), 18000);
 
   try {
     const res = await fetch(
@@ -157,11 +157,11 @@ export default async (req: Request, context: Context) => {
       ],
     };
 
-    // Run all 3 in parallel, each with 20s budget
+    // Run all 3 in parallel, each with 40s budget (within 60s function limit since parallel)
     const [real26, target26, real25] = await Promise.all([
-      queryAll(filter2026Real, 20000),
-      queryAll(filter2026Target, 20000),
-      queryAll(filter2025Real, 20000),
+      queryAll(filter2026Real, 40000),
+      queryAll(filter2026Target, 40000),
+      queryAll(filter2025Real, 40000),
     ]);
 
     // ── Aggregate ──

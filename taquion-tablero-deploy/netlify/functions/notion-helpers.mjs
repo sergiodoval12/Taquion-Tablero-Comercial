@@ -12,7 +12,7 @@ export const USER_MAP = {
   "302d872b-594c-8115-89f7-0002690a8a5e": "Diego Lajst",
   "68a319ea-bdde-4772-aa9e-63a7d3e44095": "Sergio Doval",
   "249d872b-594c-8171-a1b5-00020bea8c11": "Gisela Bongiorni",
-  "3cf22a32-bb38-4f99-afad-ead8b70b2244": "Sol Rios",
+  "3cf22a32-bb38-4f99-afad-ead8b70b2244": "Sol Rios Brinatti",
   "26ad872b-594c-817b-87c6-0002dbfa020d": "Victoria Lupo",
   "2dcd872b-594c-815a-98d4-000245b71bd9": "Solana Cuevas",
   "203d872b-594c-81cc-b938-0002a91c5a62": "Matias Fermin",

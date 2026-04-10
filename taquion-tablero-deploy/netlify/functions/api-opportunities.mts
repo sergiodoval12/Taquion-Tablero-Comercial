@@ -1,5 +1,7 @@
 import type { Context, Config } from "@netlify/functions";
-import { DB_IDS, notionQueryAll, getProp, getPropAny, jsonResponse, errorResponse } from "./notion-helpers.mjs";
+import { DB_IDS, notionQueryAll, getProp, getPropAny, getAllProps, jsonResponse, errorResponse } from "./notion-helpers.mjs";
+
+const NOTION_VERSION = "2022-06-28";
 
 const STAGE_ORDER: Record<string, number> = { Commit: 0, Forecast: 1, Upside: 2, Pipeline: 3 };
 const ACTIVE_STAGES = ["Pipeline", "Upside", "Forecast", "Commit"];
@@ -15,6 +17,49 @@ function extractPerson(page: any, ...propNames: string[]): string {
 
 export default async (req: Request, context: Context) => {
   try {
+    const url = new URL(req.url);
+
+    // Debug 1: Return Funnel database schema (instant, no records)
+    if (url.searchParams.get("debug") === "1") {
+      const apiKey = Netlify.env.get("NOTION_API_KEY");
+      const dbRes = await fetch(`https://api.notion.com/v1/databases/${DB_IDS.FUNNEL}`, {
+        headers: { "Authorization": `Bearer ${apiKey}`, "Notion-Version": NOTION_VERSION },
+      });
+      const dbMeta = await dbRes.json();
+      const schema: Record<string, any> = {};
+      if (dbMeta.properties) {
+        for (const [name, prop] of Object.entries(dbMeta.properties) as any) {
+          schema[name] = { type: prop.type };
+          if (prop.type === "select" && prop.select?.options)
+            schema[name].options = prop.select.options.map((o: any) => o.name);
+        }
+      }
+      return jsonResponse({ schema, title: dbMeta.title?.map((t: any) => t.plain_text).join("") });
+    }
+
+    // Debug 2: Return first 3 Won deals with ALL properties (to verify people fields)
+    if (url.searchParams.get("debug") === "2") {
+      const wonFilter = {
+        and: [
+          { property: "Estado Oportunidad", select: { equals: "Won" } },
+          { property: "WON DATE", date: { on_or_after: "2026-01-01" } }
+        ]
+      };
+      const apiKey = Netlify.env.get("NOTION_API_KEY");
+      const res = await fetch(`https://api.notion.com/v1/databases/${DB_IDS.FUNNEL}/query`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Notion-Version": NOTION_VERSION,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ filter: wonFilter, page_size: 3 }),
+      });
+      const data = await res.json();
+      const samples = (data.results || []).map((p: any) => getAllProps(p));
+      return jsonResponse({ samples, total: data.results?.length });
+    }
+
     // ── Active pipeline opportunities ──
     const filter = {
       or: ACTIVE_STAGES.map(stage => ({
