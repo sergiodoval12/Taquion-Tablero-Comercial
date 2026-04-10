@@ -7,18 +7,7 @@ export const DB_IDS = {
   CLIENTES: "35ec49b7371e476fa9a2bf5db46bff82",
 };
 
-export const USER_MAP = {
-  "4bff4d77-a3f3-4e30-9a56-92988bc67681": "Diego Kupferberg",
-  "302d872b-594c-8115-89f7-0002690a8a5e": "Diego Lajst",
-  "68a319ea-bdde-4772-aa9e-63a7d3e44095": "Sergio Doval",
-  "249d872b-594c-8171-a1b5-00020bea8c11": "Gisela Bongiorni",
-  "3cf22a32-bb38-4f99-afad-ead8b70b2244": "Sol Rios Brinatti",
-  "26ad872b-594c-817b-87c6-0002dbfa020d": "Victoria Lupo",
-  "2dcd872b-594c-815a-98d4-000245b71bd9": "Solana Cuevas",
-  "203d872b-594c-81cc-b938-0002a91c5a62": "Matias Fermin",
-  "209f5c27-99fd-46a4-9b1a-9469d066260d": "Azul",
-  "8e17e61c-d47c-4e5e-8965-3e85fd45dea6": "Alejo",
-};
+// No USER_MAP needed — Notion API returns correct names in p.name directly
 
 export async function notionQuery(databaseId, filter, sorts, startCursor) {
   const apiKey = Netlify.env.get("NOTION_API_KEY");
@@ -86,7 +75,7 @@ export function getProp(page, name) {
     case "date":
       return prop.date?.start || null;
     case "people":
-      return prop.people?.map(p => USER_MAP[p.id] || p.name || p.id) || [];
+      return prop.people?.map(p => p.name || p.id) || [];
     case "relation":
       return prop.relation?.map(r => r.id) || [];
     case "formula":
