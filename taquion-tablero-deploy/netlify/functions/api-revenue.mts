@@ -136,25 +136,23 @@ export default async (req: Request, context: Context) => {
       });
     }
 
-    // ── Main query: 4 parallel queries, split Real 2026 by half-year to keep each chain short ──
-    // Each chain should be 1-2 pages max → completes in ~3-4s → fits in 10s Netlify timeout
-    const Q1_MONTHS = ["1. Enero", "2. Febrero", "3. Marzo", "4. Abril", "5. Mayo", "6. Junio"];
-    const Q2_MONTHS = ["7. Julio", "8. Agosto", "9. Septiembre", "10. Octubre", "11. Noviembre", "12. Diciembre"];
+    // ── Main query: per-month Q1 queries (no pagination needed = no data loss) ──
+    // Each Q1 month has ~80 records = fits in 1 page (100 max). No pagination = guaranteed complete.
+    const MONTHS = [
+      "1. Enero", "2. Febrero", "3. Marzo", "4. Abril", "5. Mayo", "6. Junio",
+      "7. Julio", "8. Agosto", "9. Septiembre", "10. Octubre", "11. Noviembre", "12. Diciembre",
+    ];
 
-    const filterReal26H1 = {
-      and: [
-        { property: "Año Facturación", select: { equals: "2026" } },
-        { property: "Tipo", select: { equals: "Real" } },
-        { or: Q1_MONTHS.map(m => ({ property: "Mes Facturación", select: { equals: m } })) },
-      ],
-    };
-    const filterReal26H2 = {
-      and: [
-        { property: "Año Facturación", select: { equals: "2026" } },
-        { property: "Tipo", select: { equals: "Real" } },
-        { or: Q2_MONTHS.map(m => ({ property: "Mes Facturación", select: { equals: m } })) },
-      ],
-    };
+    function monthRealFilter(month: string) {
+      return {
+        and: [
+          { property: "Año Facturación", select: { equals: "2026" } },
+          { property: "Tipo", select: { equals: "Real" } },
+          { property: "Mes Facturación", select: { equals: month } },
+        ],
+      };
+    }
+
     const filterTarget26 = {
       and: [
         { property: "Año Facturación", select: { equals: "2026" } },
@@ -168,15 +166,21 @@ export default async (req: Request, context: Context) => {
       ],
     };
 
-    // 4 parallel queries — each chain is short (1-3 pages), wall time = max chain ≈ 5-7s
-    const [real26H1, real26H2, target26, real25] = await Promise.all([
-      queryAll(filterReal26H1, 8000),
-      queryAll(filterReal26H2, 8000),
-      queryAll(filterTarget26, 8000),
-      queryAll(filter2025Real, 8000),
+    // ALL in one parallel batch — each month query = 1 page (no pagination), completes in ~3s
+    // Only query months up to current month (future months have no Real data)
+    const currentMonth = new Date().getMonth(); // 0-indexed, April = 3
+    const activeMonths = MONTHS.slice(0, currentMonth + 1); // Ene through current month
+
+    const results = await Promise.all([
+      ...activeMonths.map(m => queryAll(monthRealFilter(m), 8000).catch(() => [] as any[])),
+      queryAll(filterTarget26, 8000).catch(() => [] as any[]),
+      queryAll(filter2025Real, 8000).catch(() => [] as any[]),
     ]);
 
-    const real26 = [...real26H1, ...real26H2];
+    // Last 2 entries are target26 and real25
+    const real26 = results.slice(0, activeMonths.length).flat();
+    const target26 = results[activeMonths.length];
+    const real25 = results[activeMonths.length + 1];
 
     // ── Aggregate ──
     const data2026: Record<string, MonthData> = {};
@@ -230,7 +234,7 @@ export default async (req: Request, context: Context) => {
     }
 
     // Build sorted arrays
-    const currentMonth = new Date().getMonth() + 1;
+    const currentMonthNum = currentMonth + 1; // 1-indexed for comparison with MONTH_ORDER
     const revenue = Object.entries(data2026)
       .filter(([mes]) => MONTH_ORDER[mes])
       .map(([mes, d]) => ({
@@ -238,7 +242,7 @@ export default async (req: Request, context: Context) => {
         real: Math.round(d.real),
         target: Math.round(d.target),
         r2025: Math.round(d.r2025),
-        projected: MONTH_ORDER[mes] > currentMonth,
+        projected: MONTH_ORDER[mes] > currentMonthNum,
       }))
       .sort((a, b) => MONTH_ORDER[a.mes] - MONTH_ORDER[b.mes]);
 
@@ -249,7 +253,7 @@ export default async (req: Request, context: Context) => {
     return jsonResponse({
       revenue,
       byIndustry,
-      records: { real26H1: real26H1.length, real26H2: real26H2.length, real26: real26.length, target26: target26.length, real25: real25.length },
+      records: { real26: real26.length, target26: target26.length, real25: real25.length, months: activeMonths.length },
       updatedAt: new Date().toISOString(),
     });
   } catch (err: any) {
