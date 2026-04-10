@@ -136,10 +136,30 @@ export default async (req: Request, context: Context) => {
       });
     }
 
-    // ── Main query: 2 parallel queries (combined 2026 = fewer pagination chains) ──
-    // Combine 2026 Real + Target in one query, split by Tipo client-side
-    const filter2026All = {
-      property: "Año Facturación", select: { equals: "2026" },
+    // ── Main query: 4 parallel queries, split Real 2026 by half-year to keep each chain short ──
+    // Each chain should be 1-2 pages max → completes in ~3-4s → fits in 10s Netlify timeout
+    const Q1_MONTHS = ["1. Enero", "2. Febrero", "3. Marzo", "4. Abril", "5. Mayo", "6. Junio"];
+    const Q2_MONTHS = ["7. Julio", "8. Agosto", "9. Septiembre", "10. Octubre", "11. Noviembre", "12. Diciembre"];
+
+    const filterReal26H1 = {
+      and: [
+        { property: "Año Facturación", select: { equals: "2026" } },
+        { property: "Tipo", select: { equals: "Real" } },
+        { or: Q1_MONTHS.map(m => ({ property: "Mes Facturación", select: { equals: m } })) },
+      ],
+    };
+    const filterReal26H2 = {
+      and: [
+        { property: "Año Facturación", select: { equals: "2026" } },
+        { property: "Tipo", select: { equals: "Real" } },
+        { or: Q2_MONTHS.map(m => ({ property: "Mes Facturación", select: { equals: m } })) },
+      ],
+    };
+    const filterTarget26 = {
+      and: [
+        { property: "Año Facturación", select: { equals: "2026" } },
+        { property: "Tipo", select: { equals: "Target" } },
+      ],
     };
     const filter2025Real = {
       and: [
@@ -148,15 +168,15 @@ export default async (req: Request, context: Context) => {
       ],
     };
 
-    // 2 parallel queries instead of 3 — faster pagination, fits in 10s Netlify timeout
-    const [all2026, real25] = await Promise.all([
-      queryAll(filter2026All, 9000),
-      queryAll(filter2025Real, 9000),
+    // 4 parallel queries — each chain is short (1-3 pages), wall time = max chain ≈ 5-7s
+    const [real26H1, real26H2, target26, real25] = await Promise.all([
+      queryAll(filterReal26H1, 8000),
+      queryAll(filterReal26H2, 8000),
+      queryAll(filterTarget26, 8000),
+      queryAll(filter2025Real, 8000),
     ]);
 
-    // Split 2026 by Tipo client-side
-    const real26 = all2026.filter((p: any) => getProp(p, "Tipo") === "Real");
-    const target26 = all2026.filter((p: any) => getProp(p, "Tipo") === "Target");
+    const real26 = [...real26H1, ...real26H2];
 
     // ── Aggregate ──
     const data2026: Record<string, MonthData> = {};
@@ -229,7 +249,7 @@ export default async (req: Request, context: Context) => {
     return jsonResponse({
       revenue,
       byIndustry,
-      records: { all2026: all2026.length, real26: real26.length, target26: target26.length, real25: real25.length },
+      records: { real26H1: real26H1.length, real26H2: real26H2.length, real26: real26.length, target26: target26.length, real25: real25.length },
       updatedAt: new Date().toISOString(),
     });
   } catch (err: any) {

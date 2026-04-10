@@ -42,8 +42,8 @@ export default function TabResumen() {
   return (
     <div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
-        <KPICard title="Revenue Q1 2026 (Real)" value={fmtM(q1Real)} subtitle={(q1Real / q1Target * 100).toFixed(0) + "% del target Q1"} color={COLORS.green} />
-        <KPICard title="Proyeccion Anual" value={fmtM(projected)} subtitle={(projected / annualTarget * 100).toFixed(0) + "% de " + fmtM(annualTarget) + " target"} color={projected > annualTarget ? COLORS.green : COLORS.warning} />
+        <KPICard title="Revenue Q1 2026 (Real)" value={fmtM(q1Real)} subtitle={q1Target > 0 ? (q1Real / q1Target * 100).toFixed(0) + "% del target Q1" : "Target pendiente"} color={COLORS.green} />
+        <KPICard title="Proyeccion Anual" value={fmtM(projected)} subtitle={annualTarget > 0 ? (projected / annualTarget * 100).toFixed(0) + "% de " + fmtM(annualTarget) + " target" : "Target pendiente"} color={projected > annualTarget ? COLORS.green : COLORS.warning} />
         <KPICard title={"Pipeline Total (" + OPPORTUNITIES.length + " opps)"} value={fmtM(totalPipeline)} subtitle="Commit a Pipeline activo" color={COLORS.blue} />
         <KPICard title="Cuentas Activas" value={CUENTAS_ACTIVAS.length} subtitle={upsellingCount + " opps upselling | " + newCount + " nuevas"} color={COLORS.purple} />
       </div>
