@@ -19,6 +19,20 @@ function extractStringOrArray(page: any, ...propNames: string[]): string {
   return "Sin clasificar";
 }
 
+// Extract rollup value that may be nested in array of objects
+function extractRollupFirst(page: any, propName: string): string | null {
+  const prop = page.properties?.[propName];
+  if (!prop || prop.type !== "rollup") return null;
+  const arr = prop.rollup?.array;
+  if (Array.isArray(arr) && arr.length > 0) {
+    const first = arr[0];
+    if (first.type === "select" && first.select?.name) return first.select.name;
+    if (first.type === "rich_text") return first.rich_text?.map((t: any) => t.plain_text).join("") || null;
+    if (first.type === "number") return first.number;
+  }
+  return null;
+}
+
 export default async (req: Request, context: Context) => {
   try {
     const url = new URL(req.url);
@@ -31,7 +45,7 @@ export default async (req: Request, context: Context) => {
         checkbox: { equals: false }
       });
     } catch (filterErr: any) {
-      console.warn("Filter 'Antiguo?' failed, querying without filter:", filterErr.message);
+      console.warn("Filter 'Antiguo?' failed:", filterErr.message);
       pages = await notionQueryAll(DB_IDS.CLIENTES, undefined);
     }
 
@@ -50,13 +64,24 @@ export default async (req: Request, context: Context) => {
       .map((page: any) => {
         const industria = extractStringOrArray(page, "Industria", "Industrias", "Sector", "Vertical");
         const am = extractPerson(page, "AM", "Account Manager", "Responsable");
-        const udnRaw = getPropAny(page, "Unidad de Ejecución", "UDN", "Línea de Negocio") || [];
+
+        // UDN: "Unidad de Ejecución" is a select → return as single-element array for frontend compat
+        const udnVal = getPropAny(page, "Unidad de Ejecución", "UDN", "Línea de Negocio");
+        const udn = udnVal ? (Array.isArray(udnVal) ? udnVal : [udnVal]) : [];
+
+        // Tipo: from Temporalidad rollup (Recurrente / One Shot)
+        const tipo = extractRollupFirst(page, "Temporalidad") || "Sin clasificar";
 
         return {
           nombre: getProp(page, "Nombre") || getProp(page, "Name") || "Sin nombre",
           industria,
           am,
-          udn: typeof udnRaw === "string" ? udnRaw : (Array.isArray(udnRaw) ? udnRaw.join(", ") : ""),
+          tipo,
+          ticketMes: getPropAny(page, "Ticket Mensual", "Monto Mensual", "Ticket/Mes", "Ticket", "Fee Mensual") || 0,
+          udn,
+          cerrador: extractPerson(page, "Cerrador", "Cerrador de Oportunidad"),
+          originador: extractPerson(page, "Originador", "Originador de Oportunidad", "Generador"),
+          fee: getPropAny(page, "Fee", "Fee %", "Comision", "Comisión") || 0,
           proyectosActivos: getProp(page, "Proyectos Activos") || "",
         };
       });
