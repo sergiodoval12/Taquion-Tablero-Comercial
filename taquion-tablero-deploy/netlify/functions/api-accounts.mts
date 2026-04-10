@@ -21,7 +21,9 @@ function extractStringOrArray(page: any, ...propNames: string[]): string {
 
 export default async (req: Request, context: Context) => {
   try {
-    // Query without filter first — "Antiguo?" may not exist in this database
+    const url = new URL(req.url);
+
+    // Filter: Antiguo? = false (server-side Notion filter)
     let pages: any[];
     try {
       pages = await notionQueryAll(DB_IDS.CLIENTES, {
@@ -29,38 +31,37 @@ export default async (req: Request, context: Context) => {
         checkbox: { equals: false }
       });
     } catch (filterErr: any) {
-      // If the filter property doesn't exist, query without filter
       console.warn("Filter 'Antiguo?' failed, querying without filter:", filterErr.message);
       pages = await notionQueryAll(DB_IDS.CLIENTES, undefined);
     }
 
-    // Return schema of first page for debugging (only if ?debug=1)
-    const url = new URL(req.url);
+    // Debug: return schema of first page
     if (url.searchParams.get("debug") === "1" && pages.length > 0) {
       const schema = getAllProps(pages[0]);
       return jsonResponse({ schema, totalPages: pages.length });
     }
 
-    const accounts = pages.map((page: any) => {
-      // Try multiple property name variants for each field
-      const industria = extractStringOrArray(page, "Industria", "Industrias", "Sector", "Vertical");
-      const am = extractPerson(page, "AM", "Account Manager", "Responsable");
-      const udnRaw = getPropAny(page, "Unidad de Ejecución", "UDN", "Línea de Negocio", "Linea de Negocio", "Producto") || [];
+    const accounts = pages
+      // Client-side filter: only active accounts (Esta activa? formula = true)
+      .filter((page: any) => {
+        const activa = getProp(page, "Esta activa?");
+        return activa === true;
+      })
+      .map((page: any) => {
+        const industria = extractStringOrArray(page, "Industria", "Industrias", "Sector", "Vertical");
+        const am = extractPerson(page, "AM", "Account Manager", "Responsable");
+        const udnRaw = getPropAny(page, "Unidad de Ejecución", "UDN", "Línea de Negocio") || [];
 
-      return {
-        nombre: getProp(page, "Nombre") || getProp(page, "Name") || "Sin nombre",
-        industria,
-        am,
-        tipo: getPropAny(page, "Tipo", "Tipo de Cuenta", "Tipo Cliente", "Tipo de Organización") || "Sin clasificar",
-        ticketMes: getPropAny(page, "Ticket Mensual", "Monto Mensual", "Ticket/Mes", "Ticket", "Fee Mensual") || 0,
-        udn: Array.isArray(udnRaw) ? udnRaw : (udnRaw ? [udnRaw] : []),
-        cerrador: extractPerson(page, "Cerrador", "Cerrador de Oportunidad"),
-        originador: extractPerson(page, "Originador", "Originador de Oportunidad", "Generador"),
-        fee: getPropAny(page, "Fee", "Fee %", "Comision", "Comisión") || 0,
-      };
-    }).filter((a: any) => a.nombre && !a.nombre.includes("ANTIGUO"));
+        return {
+          nombre: getProp(page, "Nombre") || getProp(page, "Name") || "Sin nombre",
+          industria,
+          am,
+          udn: typeof udnRaw === "string" ? udnRaw : (Array.isArray(udnRaw) ? udnRaw.join(", ") : ""),
+          proyectosActivos: getProp(page, "Proyectos Activos") || "",
+        };
+      });
 
-    return jsonResponse({ accounts, updatedAt: new Date().toISOString() });
+    return jsonResponse({ accounts, total: accounts.length, updatedAt: new Date().toISOString() });
   } catch (err: any) {
     console.error("api-accounts error:", err);
     return errorResponse(err.message);
