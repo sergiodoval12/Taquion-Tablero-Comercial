@@ -1,11 +1,12 @@
 import { useState, useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell, ResponsiveContainer } from "recharts";
 import { COLORS, STAGE_COLORS, STAGE_ORDER } from "../data/constants.js";
-import { OPPORTUNITIES } from "../data/opportunities.js";
+import { useData } from "../data/DataProvider.jsx";
 import { fmtM } from "../utils/formatters.js";
 import { KPICard, Badge, StageIndicator, SectionTitle } from "../components/ui/index.js";
 
 export default function TabPipeline() {
+  const { opportunities: OPPORTUNITIES } = useData();
   const [stageFilter, setStageFilter] = useState("all");
   const [industryFilter, setIndustryFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");

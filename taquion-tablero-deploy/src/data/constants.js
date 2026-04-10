@@ -35,6 +35,7 @@ export const STAGE_ORDER = { Commit: 0, Forecast: 1, Upside: 2, Pipeline: 3 };
 export const TABS = [
   { id: "resumen", label: "Resumen Ejecutivo", icon: "+" },
   { id: "revenue", label: "Revenue & Quarters", icon: "$" },
+  { id: "seguimiento", label: "Seguimiento Comercial", icon: "@" },
   { id: "cuentas", label: "Cuentas & Industrias", icon: "#" },
   { id: "pipeline", label: "Pipeline & Funnel", icon: ">" },
   { id: "equipo", label: "Equipo Comercial", icon: "*" },

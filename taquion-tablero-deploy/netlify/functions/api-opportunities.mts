@@ -1,13 +1,21 @@
 import type { Context, Config } from "@netlify/functions";
-import { DB_IDS, notionQueryAll, getProp, jsonResponse, errorResponse } from "./notion-helpers.mjs";
+import { DB_IDS, notionQueryAll, getProp, getPropAny, jsonResponse, errorResponse } from "./notion-helpers.mjs";
 
 const STAGE_ORDER: Record<string, number> = { Commit: 0, Forecast: 1, Upside: 2, Pipeline: 3 };
-
 const ACTIVE_STAGES = ["Pipeline", "Upside", "Forecast", "Commit"];
+
+function extractPerson(page: any, ...propNames: string[]): string {
+  for (const name of propNames) {
+    const val = getProp(page, name);
+    if (Array.isArray(val) && val.length > 0) return val[0];
+    if (typeof val === "string" && val) return val;
+  }
+  return "Sin asignar";
+}
 
 export default async (req: Request, context: Context) => {
   try {
-    // Query funnel/opportunities database - only active stages
+    // ── Active pipeline opportunities ──
     const filter = {
       or: ACTIVE_STAGES.map(stage => ({
         property: "Estado Oportunidad",
@@ -17,14 +25,12 @@ export default async (req: Request, context: Context) => {
 
     const pages = await notionQueryAll(DB_IDS.FUNNEL, filter);
 
-    const opportunities = pages.map(page => {
+    const opportunities = pages.map((page: any) => {
       const stage = getProp(page, "Estado Oportunidad") || "Unknown";
       const industrias = getProp(page, "Industrias") || [];
-      const cerrador = getProp(page, "Cerrador de Oportunidad") || [];
       const pipelineDate = getProp(page, "PIPELINE DATE");
       const upsideDate = getProp(page, "UPSIDE DATE");
 
-      // Calculate velocity if both dates exist
       let velocityDays: number | undefined;
       if (pipelineDate && upsideDate) {
         const diff = new Date(upsideDate).getTime() - new Date(pipelineDate).getTime();
@@ -38,16 +44,17 @@ export default async (req: Request, context: Context) => {
         total: getProp(page, "$ Total Estimado (Sin IVA)") || 0,
         industria: industrias.length > 0 ? industrias[0] : "Sin clasificar",
         upselling: getProp(page, "Upselling") === true,
-        cerrador: cerrador.length > 0 ? cerrador[0] : "Sin asignar",
-        duracion: getProp(page, "Duración") || "",
+        cerrador: extractPerson(page, "Cerrador de Oportunidad", "Cerrador"),
+        originador: extractPerson(page, "Originador de Oportunidad", "Originador", "Generador de Oportunidad", "Generador"),
+        bo: extractPerson(page, "Business Owner", "BO", "Owner de Vertical"),
+        duracion: getPropAny(page, "Duración", "Duracion", "Duration") || "",
         velocityDays,
       };
     });
 
-    // Sort: Commit > Forecast > Upside > Pipeline
     opportunities.sort((a: any, b: any) => (STAGE_ORDER[a.stage] ?? 99) - (STAGE_ORDER[b.stage] ?? 99));
 
-    // Also get Won in 2026 for team performance
+    // ── Won deals in 2026 ──
     const wonFilter = {
       and: [
         { property: "Estado Oportunidad", select: { equals: "Won" } },
@@ -56,13 +63,20 @@ export default async (req: Request, context: Context) => {
     };
 
     const wonPages = await notionQueryAll(DB_IDS.FUNNEL, wonFilter);
-    const won2026 = wonPages.map(page => {
-      const cerrador = getProp(page, "Cerrador de Oportunidad") || [];
+    const won2026 = wonPages.map((page: any) => {
+      const industrias = getProp(page, "Industrias") || [];
+      const wonDate = getProp(page, "WON DATE") || "";
+      // Extract month from WON DATE (YYYY-MM-DD → YYYY-MM)
+      const fecha = wonDate ? wonDate.slice(0, 7) : "";
+
       return {
         nombre: getProp(page, "Nombre Oportunidad") || "Sin nombre",
         total: getProp(page, "$ Total Estimado (Sin IVA)") || 0,
-        cerrador: cerrador.length > 0 ? cerrador[0] : "Sin asignar",
-        fecha: getProp(page, "WON DATE") || "",
+        cerrador: extractPerson(page, "Cerrador de Oportunidad", "Cerrador"),
+        originador: extractPerson(page, "Originador de Oportunidad", "Originador", "Generador de Oportunidad", "Generador"),
+        bo: extractPerson(page, "Business Owner", "BO", "Owner de Vertical"),
+        industria: industrias.length > 0 ? industrias[0] : "Sin clasificar",
+        fecha,
       };
     });
 

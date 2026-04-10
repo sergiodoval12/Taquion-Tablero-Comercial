@@ -112,6 +112,24 @@ export function getProp(page, name) {
   }
 }
 
+// Try multiple property name variants, return first non-null result
+export function getPropAny(page, ...names) {
+  for (const name of names) {
+    const val = getProp(page, name);
+    if (val !== null && val !== undefined) return val;
+  }
+  return null;
+}
+
+// Extract ALL properties from a page as a flat object (for debugging/schema discovery)
+export function getAllProps(page) {
+  const result = {};
+  for (const [name, prop] of Object.entries(page.properties)) {
+    result[name] = { type: prop.type, value: getProp(page, name) };
+  }
+  return result;
+}
+
 export function jsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,

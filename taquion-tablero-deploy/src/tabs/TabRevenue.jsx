@@ -1,10 +1,11 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { COLORS } from "../data/constants.js";
-import { REVENUE_2026 } from "../data/revenue.js";
+import { useData } from "../data/DataProvider.jsx";
 import { fmtM } from "../utils/formatters.js";
 import { ProgressBar, SectionTitle, CustomTooltip } from "../components/ui/index.js";
 
 export default function TabRevenue() {
+  const { revenue: REVENUE_2026 } = useData();
   const quarters = [
     { name: "Q1", months: [0, 1, 2] },
     { name: "Q2", months: [3, 4, 5] },

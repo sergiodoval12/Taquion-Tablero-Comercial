@@ -1,12 +1,12 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { COLORS, STAGE_COLORS } from "../data/constants.js";
-import { REVENUE_2026 } from "../data/revenue.js";
-import { OPPORTUNITIES } from "../data/opportunities.js";
-import { CUENTAS_ACTIVAS } from "../data/accounts.js";
+import { useData } from "../data/DataProvider.jsx";
 import { fmtM } from "../utils/formatters.js";
 import { KPICard, SectionTitle, CustomTooltip } from "../components/ui/index.js";
 
 export default function TabResumen() {
+  const { revenue: REVENUE_2026, opportunities: OPPORTUNITIES, accounts: CUENTAS_ACTIVAS } = useData();
+
   const q1Real = REVENUE_2026.slice(0, 3).reduce((s, m) => s + m.real, 0);
   const q1Target = REVENUE_2026.slice(0, 3).reduce((s, m) => s + m.target, 0);
   const projected = REVENUE_2026.reduce((s, m) => s + m.real, 0);

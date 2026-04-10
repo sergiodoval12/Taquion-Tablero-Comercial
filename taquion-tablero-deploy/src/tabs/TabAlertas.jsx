@@ -1,9 +1,10 @@
 import { COLORS, STAGE_ORDER } from "../data/constants.js";
-import { OPPORTUNITIES } from "../data/opportunities.js";
+import { useData } from "../data/DataProvider.jsx";
 import { fmtM } from "../utils/formatters.js";
 import { KPICard, Badge, StageIndicator, SectionTitle } from "../components/ui/index.js";
 
 export default function TabAlertas() {
+  const { opportunities: OPPORTUNITIES } = useData();
   const upsellingOpps = OPPORTUNITIES.filter(o => o.upselling).sort((a, b) => STAGE_ORDER[a.stage] - STAGE_ORDER[b.stage]);
   const newOpps = OPPORTUNITIES.filter(o => !o.upselling);
   const upsellingValue = upsellingOpps.reduce((s, o) => s + o.total, 0);
