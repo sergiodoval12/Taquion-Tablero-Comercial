@@ -2,9 +2,9 @@
 const NOTION_VERSION = "2022-06-28";
 
 export const DB_IDS = {
-  FORECAST: "43f5c1d65c6e464f8aed27d4d5c4b9eb",
-  FUNNEL: "905f0e56021d49769e1c8c73c2f1b4b3",
-  CLIENTES: "002d0e9c565a4e79b9ddfc31229c2a57",
+  FORECAST: "e316de3f5d67463fb6972bebe213610e",
+  FUNNEL: "3c563648cf8b477ab4a89db37db894d6",
+  CLIENTES: "35ec49b7371e476fa9a2bf5db46bff82",
 };
 
 export const USER_MAP = {
