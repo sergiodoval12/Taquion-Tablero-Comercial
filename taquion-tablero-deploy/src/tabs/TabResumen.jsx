@@ -9,14 +9,15 @@ export default function TabResumen() {
 
   const q1Real = REVENUE_2026.slice(0, 3).reduce((s, m) => s + m.real, 0);
   const q1Target = REVENUE_2026.slice(0, 3).reduce((s, m) => s + m.target, 0);
-  // Proyección anual: para meses pasados usa real, para futuros usa projected (probability-weighted)
-  const annualProjected = REVENUE_2026.reduce((s, m) => s + (m.isFuture ? (m.projected || 0) : m.real), 0);
+  // Proyección anual: Monto Mensual Ajustado para TODOS los meses (Won=100%, Forecast=75%, Upside=40%)
+  // Esto coincide con "Proyectado Anual" de Notion ($2,293M)
+  const annualProjected = REVENUE_2026.reduce((s, m) => s + (m.projected || 0), 0);
   const annualTarget = REVENUE_2026.reduce((s, m) => s + m.target, 0);
 
-  // Chart data: merge real + projected into one display value
+  // Chart data: siempre mostrar projected (Monto Mensual Ajustado) para igualar Notion
   const chartData = REVENUE_2026.map(m => ({
     ...m,
-    display: m.isFuture ? (m.projected || 0) : m.real,
+    display: m.projected || 0,
   }));
 
   const commitValue = OPPORTUNITIES.filter(o => o.stage === "Commit").reduce((s, o) => s + o.total, 0);
@@ -65,12 +66,12 @@ export default function TabResumen() {
               <YAxis tick={{ fontSize: 11 }} tickFormatter={fmtM} />
               <Tooltip content={<CustomTooltip />} />
               <Legend wrapperStyle={{ fontSize: 11 }} />
-              <Bar dataKey="display" name="2026 Real/Proj" fill={COLORS.accent} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="display" name="2026 Ponderado" fill={COLORS.accent} radius={[4, 4, 0, 0]} />
               <Bar dataKey="target" name="Target" fill={COLORS.lightGray} radius={[4, 4, 0, 0]} />
               <Bar dataKey="r2025" name="2025 Real" fill={COLORS.blue + "60"} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
-          <div style={{ fontSize: 11, color: COLORS.gray, marginTop: 4 }}>* Abril en adelante incluye proyeccion segun forecast Notion</div>
+          <div style={{ fontSize: 11, color: COLORS.gray, marginTop: 4 }}>* Ponderado = Won 100% + Forecast 75% + Upside 40% (Monto Mensual Ajustado de Notion)</div>
         </div>
 
         <div>

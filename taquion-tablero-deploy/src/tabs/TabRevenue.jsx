@@ -14,16 +14,17 @@ export default function TabRevenue() {
   ];
 
   const qData = quarters.map(q => {
-    const real = q.months.reduce((s, i) => s + REVENUE_2026[i].real, 0);
-    const target = q.months.reduce((s, i) => s + REVENUE_2026[i].target, 0);
-    const r2025 = q.months.reduce((s, i) => s + REVENUE_2026[i].r2025, 0);
-    const yoy = r2025 > 0 ? ((real / r2025 - 1) * 100) : 0;
-    return { ...q, real, target, r2025, yoy, pct: (real / target * 100) };
+    const projected = q.months.reduce((s, i) => s + (REVENUE_2026[i]?.projected || 0), 0);
+    const real = q.months.reduce((s, i) => s + (REVENUE_2026[i]?.real || 0), 0);
+    const target = q.months.reduce((s, i) => s + (REVENUE_2026[i]?.target || 0), 0);
+    const r2025 = q.months.reduce((s, i) => s + (REVENUE_2026[i]?.r2025 || 0), 0);
+    const yoy = r2025 > 0 ? ((projected / r2025 - 1) * 100) : 0;
+    return { ...q, projected, real, target, r2025, yoy, pct: target > 0 ? (projected / target * 100) : 0 };
   });
 
   const cumulativeData = REVENUE_2026.map((m, i) => ({
     mes: m.mes,
-    realAcum: REVENUE_2026.slice(0, i + 1).reduce((s, x) => s + x.real, 0),
+    ponderadoAcum: REVENUE_2026.slice(0, i + 1).reduce((s, x) => s + (x.projected || 0), 0),
     targetAcum: REVENUE_2026.slice(0, i + 1).reduce((s, x) => s + x.target, 0),
     r2025Acum: REVENUE_2026.slice(0, i + 1).reduce((s, x) => s + x.r2025, 0),
   }));
@@ -34,8 +35,8 @@ export default function TabRevenue() {
         {qData.map(q => (
           <div key={q.name} style={{ background: "white", borderRadius: 12, padding: 20, borderTop: "3px solid " + (q.pct >= 100 ? COLORS.green : q.pct >= 80 ? COLORS.warning : COLORS.red) }}>
             <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.dark, marginBottom: 8 }}>{q.name} 2026</div>
-            <div style={{ fontSize: 22, fontWeight: 700, color: COLORS.dark }}>{fmtM(q.real)}</div>
-            <ProgressBar value={q.real} max={q.target} label={"Target: " + fmtM(q.target)} />
+            <div style={{ fontSize: 22, fontWeight: 700, color: COLORS.dark }}>{fmtM(q.projected)}</div>
+            <ProgressBar value={q.projected} max={q.target} label={"Target: " + fmtM(q.target)} />
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: COLORS.gray, marginTop: 4 }}>
               <span>2025: {fmtM(q.r2025)}</span>
               <span style={{ color: q.yoy >= 0 ? COLORS.green : COLORS.red }}>YoY: {q.yoy >= 0 ? "+" : ""}{q.yoy.toFixed(0)}%</span>
@@ -53,7 +54,7 @@ export default function TabRevenue() {
             <YAxis tickFormatter={fmtM} tick={{ fontSize: 11 }} />
             <Tooltip content={<CustomTooltip />} />
             <Legend wrapperStyle={{ fontSize: 11 }} />
-            <Line type="monotone" dataKey="realAcum" name="2026 Acumulado" stroke={COLORS.accent} strokeWidth={3} dot={{ r: 4 }} />
+            <Line type="monotone" dataKey="ponderadoAcum" name="2026 Ponderado" stroke={COLORS.accent} strokeWidth={3} dot={{ r: 4 }} />
             <Line type="monotone" dataKey="targetAcum" name="Target Acumulado" stroke={COLORS.gray} strokeWidth={2} strokeDasharray="5 5" />
             <Line type="monotone" dataKey="r2025Acum" name="2025 Acumulado" stroke={COLORS.blue} strokeWidth={2} opacity={0.5} />
           </LineChart>
@@ -66,7 +67,7 @@ export default function TabRevenue() {
           <thead>
             <tr style={{ borderBottom: "2px solid " + COLORS.dark }}>
               <th style={{ textAlign: "left", padding: 8 }}>Mes</th>
-              <th style={{ textAlign: "right", padding: 8 }}>Real 2026</th>
+              <th style={{ textAlign: "right", padding: 8 }}>Ponderado 2026</th>
               <th style={{ textAlign: "right", padding: 8 }}>Target</th>
               <th style={{ textAlign: "right", padding: 8 }}>% Target</th>
               <th style={{ textAlign: "right", padding: 8 }}>Real 2025</th>
@@ -75,12 +76,13 @@ export default function TabRevenue() {
           </thead>
           <tbody>
             {REVENUE_2026.map((m) => {
-              const pct = m.target > 0 ? (m.real / m.target * 100) : 0;
-              const yoy = m.r2025 > 0 ? ((m.real / m.r2025 - 1) * 100) : 0;
+              const pond = m.projected || 0;
+              const pct = m.target > 0 ? (pond / m.target * 100) : 0;
+              const yoy = m.r2025 > 0 ? ((pond / m.r2025 - 1) * 100) : 0;
               return (
-                <tr key={m.mes} style={{ borderBottom: "1px solid " + COLORS.lightGray, opacity: m.projected ? 0.7 : 1 }}>
-                  <td style={{ padding: 8 }}>{m.mes} {m.projected ? " (proj)" : ""}</td>
-                  <td style={{ textAlign: "right", padding: 8, fontWeight: 600 }}>{fmtM(m.real)}</td>
+                <tr key={m.mes} style={{ borderBottom: "1px solid " + COLORS.lightGray, opacity: m.isFuture ? 0.7 : 1 }}>
+                  <td style={{ padding: 8 }}>{m.mes}{m.isFuture ? " *" : ""}</td>
+                  <td style={{ textAlign: "right", padding: 8, fontWeight: 600 }}>{fmtM(pond)}</td>
                   <td style={{ textAlign: "right", padding: 8, color: COLORS.gray }}>{fmtM(m.target)}</td>
                   <td style={{ textAlign: "right", padding: 8, color: pct >= 100 ? COLORS.green : pct >= 80 ? COLORS.warning : COLORS.red }}>{pct.toFixed(0)}%</td>
                   <td style={{ textAlign: "right", padding: 8, color: COLORS.gray }}>{fmtM(m.r2025)}</td>
