@@ -5,7 +5,7 @@ import { useData } from "../data/DataProvider.jsx";
 import { fmtM } from "../utils/formatters.js";
 import { KPICard, Badge, SectionTitle } from "../components/ui/index.js";
 
-const UDN_COLORS = { Inspire: "#E94560", Insights: "#0F3460", Ignite: "#F5A623" };
+const SECTOR_COLORS = { "PRIVADO": COLORS.blue, "PÚBLICO": COLORS.green, "Sin clasificar": COLORS.gray };
 
 export default function TabCuentas() {
   const { accounts: CUENTAS_ACTIVAS } = useData();
@@ -22,30 +22,40 @@ export default function TabCuentas() {
 
   const industries = [...new Set(CUENTAS_ACTIVAS.map(c => c.industria))].sort();
 
-  const recurrentes = CUENTAS_ACTIVAS.filter(c => c.tipo === "Recurrente");
-  const oneShot = CUENTAS_ACTIVAS.filter(c => c.tipo === "One Shot");
-  const totalTicketMes = CUENTAS_ACTIVAS.reduce((s, c) => s + (c.ticketMes || 0), 0);
+  // Case-insensitive tipo matching
+  const recurrentes = CUENTAS_ACTIVAS.filter(c => c.tipo?.toLowerCase() === "recurrente");
+  const oneShot = CUENTAS_ACTIVAS.filter(c => c.tipo?.toLowerCase() === "one shot");
+  const campana = CUENTAS_ACTIVAS.filter(c => c.tipo?.toLowerCase().includes("campaña") || c.tipo?.toLowerCase().includes("tiempo limitado"));
 
-  // UDN distribution
-  const udnCount = { Inspire: 0, Insights: 0, Ignite: 0 };
-  CUENTAS_ACTIVAS.forEach(c => (c.udn || []).forEach(u => { udnCount[u] = (udnCount[u] || 0) + 1; }));
-  const udnData = Object.entries(udnCount).map(([name, value]) => ({ name, value }));
+  // Sector distribution (PRIVADO / PÚBLICO)
+  const sectorCount = {};
+  CUENTAS_ACTIVAS.forEach(c => {
+    const s = c.sector || "Sin clasificar";
+    sectorCount[s] = (sectorCount[s] || 0) + 1;
+  });
+  const sectorData = Object.entries(sectorCount).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
 
   const filtered = CUENTAS_ACTIVAS
     .filter(c => filter === "all" || c.industria === filter)
-    .filter(c => tipoFilter === "all" || c.tipo === tipoFilter);
+    .filter(c => {
+      if (tipoFilter === "all") return true;
+      return c.tipo?.toLowerCase() === tipoFilter.toLowerCase();
+    });
 
   const amCount = {};
   CUENTAS_ACTIVAS.forEach(c => { amCount[c.am] = (amCount[c.am] || 0) + 1; });
   const amData = Object.entries(amCount).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
 
+  // Get unique tipo values for dropdown
+  const tipos = [...new Set(CUENTAS_ACTIVAS.map(c => c.tipo).filter(Boolean))].sort();
+
   return (
     <div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 16, marginBottom: 24 }}>
         <KPICard title="Cuentas Activas" value={CUENTAS_ACTIVAS.length} color={COLORS.blue} />
-        <KPICard title="Recurrentes" value={recurrentes.length} subtitle={((recurrentes.length / CUENTAS_ACTIVAS.length) * 100).toFixed(0) + "% del total"} color={COLORS.green} />
-        <KPICard title="One Shot" value={oneShot.length} color={COLORS.warning} />
-        <KPICard title="Ticket Mensual Total" value={fmtM(totalTicketMes)} color={COLORS.accent} />
+        <KPICard title="Recurrentes" value={recurrentes.length} subtitle={CUENTAS_ACTIVAS.length > 0 ? ((recurrentes.length / CUENTAS_ACTIVAS.length) * 100).toFixed(0) + "% del total" : ""} color={COLORS.green} />
+        <KPICard title="One Shot" value={oneShot.length} subtitle={campana.length > 0 ? campana.length + " campañas" : ""} color={COLORS.warning} />
+        <KPICard title="Sector Privado" value={sectorCount["PRIVADO"] || 0} subtitle={(sectorCount["PÚBLICO"] || 0) + " público"} color={COLORS.accent} />
         <KPICard title="Industrias" value={Object.keys(industryCount).length} color={COLORS.purple} />
       </div>
 
@@ -63,15 +73,15 @@ export default function TabCuentas() {
         </div>
 
         <div style={{ background: "white", borderRadius: 12, padding: 24 }}>
-          <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 16 }}>Productos UDN</h3>
+          <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 16 }}>Sector</h3>
           <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={udnData}>
+            <BarChart data={sectorData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="name" tick={{ fontSize: 12 }} />
               <YAxis tick={{ fontSize: 11 }} />
               <Tooltip />
               <Bar dataKey="value" name="Cuentas" radius={[4, 4, 0, 0]}>
-                {udnData.map((entry, i) => <Cell key={i} fill={UDN_COLORS[entry.name] || COLORS.gray} />)}
+                {sectorData.map((entry, i) => <Cell key={i} fill={SECTOR_COLORS[entry.name] || COLORS.gray} />)}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
@@ -91,7 +101,7 @@ export default function TabCuentas() {
         </div>
       </div>
 
-      <SectionTitle>Indicadores Comerciales por Cuenta</SectionTitle>
+      <SectionTitle>Detalle de Cuentas Activas</SectionTitle>
       <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
         <select value={filter} onChange={(e) => setFilter(e.target.value)} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid " + COLORS.lightGray, fontSize: 13 }}>
           <option value="all">Todas las industrias</option>
@@ -99,8 +109,7 @@ export default function TabCuentas() {
         </select>
         <select value={tipoFilter} onChange={(e) => setTipoFilter(e.target.value)} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid " + COLORS.lightGray, fontSize: 13 }}>
           <option value="all">Todos los tipos</option>
-          <option value="Recurrente">Recurrente</option>
-          <option value="One Shot">One Shot</option>
+          {tipos.map(t => <option key={t} value={t}>{t}</option>)}
         </select>
       </div>
       <div style={{ background: "white", borderRadius: 12, padding: 24, overflowX: "auto" }}>
@@ -110,16 +119,13 @@ export default function TabCuentas() {
               <th style={{ textAlign: "left", padding: 8 }}>Cuenta</th>
               <th style={{ textAlign: "left", padding: 8 }}>Industria</th>
               <th style={{ textAlign: "center", padding: 8 }}>Tipo</th>
-              <th style={{ textAlign: "right", padding: 8 }}>Ticket/Mes</th>
-              <th style={{ textAlign: "center", padding: 8 }}>UDN</th>
-              <th style={{ textAlign: "left", padding: 8 }}>Cerrador</th>
-              <th style={{ textAlign: "left", padding: 8 }}>Originador</th>
-              <th style={{ textAlign: "center", padding: 8 }}>Fee %</th>
+              <th style={{ textAlign: "center", padding: 8 }}>Sector</th>
               <th style={{ textAlign: "left", padding: 8 }}>AM</th>
+              <th style={{ textAlign: "left", padding: 8 }}>Proyectos Activos</th>
             </tr>
           </thead>
           <tbody>
-            {filtered.sort((a, b) => (b.ticketMes || 0) - (a.ticketMes || 0)).map((c, i) => (
+            {filtered.sort((a, b) => a.nombre.localeCompare(b.nombre)).map((c, i) => (
               <tr key={i} style={{ borderBottom: "1px solid " + COLORS.lightGray }}>
                 <td style={{ padding: 8, fontWeight: 500 }}>{c.nombre}</td>
                 <td style={{ padding: 8 }}><Badge text={c.industria} color={COLORS.blue} /></td>
@@ -128,29 +134,27 @@ export default function TabCuentas() {
                     fontSize: 10,
                     padding: "2px 8px",
                     borderRadius: 4,
-                    background: c.tipo === "Recurrente" ? COLORS.green + "15" : COLORS.warning + "15",
-                    color: c.tipo === "Recurrente" ? COLORS.green : COLORS.warning,
+                    background: c.tipo?.toLowerCase() === "recurrente" ? COLORS.green + "15" : COLORS.warning + "15",
+                    color: c.tipo?.toLowerCase() === "recurrente" ? COLORS.green : COLORS.warning,
                     fontWeight: 600,
                   }}>
                     {c.tipo}
                   </span>
                 </td>
-                <td style={{ padding: 8, textAlign: "right", fontWeight: 600 }}>{c.ticketMes > 0 ? fmtM(c.ticketMes) : "—"}</td>
                 <td style={{ padding: 8, textAlign: "center" }}>
-                  <div style={{ display: "flex", gap: 4, justifyContent: "center" }}>
-                    {(c.udn || []).map(u => (
-                      <span key={u} style={{ fontSize: 9, padding: "1px 6px", borderRadius: 3, background: UDN_COLORS[u] + "15", color: UDN_COLORS[u], fontWeight: 600 }}>
-                        {u}
-                      </span>
-                    ))}
-                  </div>
-                </td>
-                <td style={{ padding: 8, fontSize: 11 }}>{c.cerrador}</td>
-                <td style={{ padding: 8, fontSize: 11 }}>{c.originador}</td>
-                <td style={{ padding: 8, textAlign: "center", fontWeight: 600, color: c.fee >= 7.5 ? COLORS.accent : c.fee > 0 ? COLORS.blue : COLORS.gray }}>
-                  {c.fee > 0 ? c.fee + "%" : "—"}
+                  <span style={{
+                    fontSize: 10,
+                    padding: "2px 8px",
+                    borderRadius: 4,
+                    background: (SECTOR_COLORS[c.sector] || COLORS.gray) + "15",
+                    color: SECTOR_COLORS[c.sector] || COLORS.gray,
+                    fontWeight: 600,
+                  }}>
+                    {c.sector}
+                  </span>
                 </td>
                 <td style={{ padding: 8, fontSize: 11 }}>{c.am}</td>
+                <td style={{ padding: 8, fontSize: 11, maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.proyectosActivos}</td>
               </tr>
             ))}
           </tbody>

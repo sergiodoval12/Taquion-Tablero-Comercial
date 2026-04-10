@@ -50,9 +50,8 @@ export default function TabSeguimiento() {
 
     const pipelineValue = pipelineAll.reduce((s, o) => s + o.total, 0);
 
-    // Cuentas activas donde participa
-    const cuentasOriginadas = CUENTAS_ACTIVAS.filter(c => c.originador === selected);
-    const cuentasCerradas = CUENTAS_ACTIVAS.filter(c => c.cerrador === selected);
+    // Cuentas activas donde es AM
+    const cuentasAM = CUENTAS_ACTIVAS.filter(c => c.am === selected);
 
     // Won by industry
     const wonByIndustry = {};

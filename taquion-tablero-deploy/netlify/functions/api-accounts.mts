@@ -33,9 +33,61 @@ function extractRollupFirst(page: any, propName: string): string | null {
   return null;
 }
 
+const NOTION_VERSION = "2022-06-28";
+
 export default async (req: Request, context: Context) => {
   try {
     const url = new URL(req.url);
+
+    // Debug 0: return Clientes database schema (instant, no records)
+    if (url.searchParams.get("debug") === "0") {
+      const apiKey = Netlify.env.get("NOTION_API_KEY");
+      const dbRes = await fetch(`https://api.notion.com/v1/databases/${DB_IDS.CLIENTES}`, {
+        headers: { "Authorization": `Bearer ${apiKey}`, "Notion-Version": NOTION_VERSION },
+      });
+      const dbMeta = await dbRes.json();
+      const schema: Record<string, any> = {};
+      if (dbMeta.properties) {
+        for (const [name, prop] of Object.entries(dbMeta.properties) as any) {
+          schema[name] = { type: prop.type };
+          if (prop.type === "select" && prop.select?.options)
+            schema[name].options = prop.select.options.map((o: any) => o.name);
+          if (prop.type === "rollup") {
+            schema[name].function = prop.rollup?.function;
+            schema[name].relation = prop.rollup?.relation_property_name;
+            schema[name].rollup_property = prop.rollup?.rollup_property_name;
+          }
+        }
+      }
+      return jsonResponse({ schema, title: dbMeta.title?.map((t: any) => t.plain_text).join("") });
+    }
+
+    // Debug 2: return raw AM data for active accounts (to diagnose name mismatch)
+    if (url.searchParams.get("debug") === "2") {
+      const apiKey = Netlify.env.get("NOTION_API_KEY");
+      const body: any = {
+        page_size: 100,
+        filter: { property: "Antiguo?", checkbox: { equals: false } },
+      };
+      const res = await fetch(`https://api.notion.com/v1/databases/${DB_IDS.CLIENTES}/query`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${apiKey}`, "Notion-Version": NOTION_VERSION, "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      const debug = (data.results || [])
+        .filter((p: any) => {
+          // Only active accounts
+          const activa = p.properties?.["Esta activa?"];
+          return activa?.formula?.boolean === true;
+        })
+        .slice(0, 10)
+        .map((p: any) => ({
+          nombre: p.properties?.["Nombre"]?.title?.map((t: any) => t.plain_text).join("") || "?",
+          am_raw: p.properties?.["AM"],
+        }));
+      return jsonResponse({ debug, total: data.results?.length });
+    }
 
     // Filter: Antiguo? = false (server-side Notion filter)
     let pages: any[];
@@ -62,26 +114,25 @@ export default async (req: Request, context: Context) => {
         return activa === true;
       })
       .map((page: any) => {
-        const industria = extractStringOrArray(page, "Industria", "Industrias", "Sector", "Vertical");
-        const am = extractPerson(page, "AM", "Account Manager", "Responsable");
+        const industria = extractStringOrArray(page, "Industria", "Industrias");
+        const am = extractPerson(page, "AM");
 
-        // UDN: "Unidad de Ejecución" is a select → return as single-element array for frontend compat
-        const udnVal = getPropAny(page, "Unidad de Ejecución", "UDN", "Línea de Negocio");
-        const udn = udnVal ? (Array.isArray(udnVal) ? udnVal : [udnVal]) : [];
+        // Sector: "Unidad de Ejecución" select (PRIVADO / PÚBLICO)
+        const sector = getProp(page, "Unidad de Ejecución") || "Sin clasificar";
 
-        // Tipo: from Temporalidad rollup (Recurrente / One Shot)
+        // Tipo: from Temporalidad rollup (Recurrente / One shot / Campaña por tiempo limitado)
         const tipo = extractRollupFirst(page, "Temporalidad") || "Sin clasificar";
 
+        // Solución vendida: rollup of multi_select from related opportunities
+        const solVendida = extractRollupFirst(page, "Solución vendida") || "";
+
         return {
-          nombre: getProp(page, "Nombre") || getProp(page, "Name") || "Sin nombre",
+          nombre: getProp(page, "Nombre") || "Sin nombre",
           industria,
           am,
           tipo,
-          ticketMes: getPropAny(page, "Ticket Mensual", "Monto Mensual", "Ticket/Mes", "Ticket", "Fee Mensual") || 0,
-          udn,
-          cerrador: extractPerson(page, "Cerrador", "Cerrador de Oportunidad"),
-          originador: extractPerson(page, "Originador", "Originador de Oportunidad", "Generador"),
-          fee: getPropAny(page, "Fee", "Fee %", "Comision", "Comisión") || 0,
+          sector,
+          solVendida,
           proyectosActivos: getProp(page, "Proyectos Activos") || "",
         };
       });
