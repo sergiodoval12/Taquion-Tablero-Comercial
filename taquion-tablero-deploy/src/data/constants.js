@@ -40,4 +40,5 @@ export const TABS = [
   { id: "pipeline", label: "Pipeline & Funnel", icon: ">" },
   { id: "equipo", label: "Equipo Comercial", icon: "*" },
   { id: "alertas", label: "Alertas & Upselling", icon: "!" },
+  { id: "forecast-cfo", label: "Forecast CFO", icon: "F" },
 ];

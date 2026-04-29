@@ -75,6 +75,14 @@ interface MonthData {
   r2025: number;
 }
 
+interface StageMonthData {
+  won: number;
+  commit: number;
+  forecast: number;
+  upside: number;
+  pipeline: number;
+}
+
 export default async (req: Request, context: Context) => {
   try {
     const url = new URL(req.url);
@@ -182,10 +190,12 @@ export default async (req: Request, context: Context) => {
 
     // ── Aggregate ──
     const data2026: Record<string, MonthData> = {};
+    const stageData: Record<string, StageMonthData> = {};
     const industryRevenue: Record<string, number> = {};
 
     for (const m of Object.values(MONTH_MAP)) {
       if (!data2026[m]) data2026[m] = { real: 0, projected: 0, target: 0, r2025: 0 };
+      if (!stageData[m]) stageData[m] = { won: 0, commit: 0, forecast: 0, upside: 0, pipeline: 0 };
     }
 
     // Process 2026 Real — two passes:
@@ -214,6 +224,16 @@ export default async (req: Request, context: Context) => {
         if (industria) {
           industryRevenue[industria] = (industryRevenue[industria] || 0) + monto;
         }
+      }
+
+      // Stage breakdown: raw Monto Mensual per stage (for CFO forecast view)
+      if (monto && estadoOpp) {
+        const stage = stageData[mesShort];
+        if (estadoOpp === "Won") stage.won += monto;
+        else if (estadoOpp === "Commit") stage.commit += monto;
+        else if (estadoOpp === "Forecast") stage.forecast += monto;
+        else if (estadoOpp === "Upside") stage.upside += monto;
+        else if (estadoOpp === "Pipeline") stage.pipeline += monto;
       }
     }
 
@@ -256,9 +276,25 @@ export default async (req: Request, context: Context) => {
       .map(([name, total]) => ({ name, total: Math.round(total) }))
       .sort((a, b) => b.total - a.total);
 
+    // Forecast by stage: monthly breakdown for CFO view
+    const forecastByStage = Object.entries(stageData)
+      .filter(([mes]) => MONTH_ORDER[mes])
+      .map(([mes, d]) => ({
+        mes,
+        won: Math.round(d.won),
+        commit: Math.round(d.commit),
+        forecast: Math.round(d.forecast),
+        upside: Math.round(d.upside),
+        pipeline: Math.round(d.pipeline),
+        // Weighted total (ponderado)
+        ponderado: Math.round(d.won + d.commit * 0.9 + d.forecast * 0.75 + d.upside * 0.4),
+      }))
+      .sort((a, b) => MONTH_ORDER[a.mes] - MONTH_ORDER[b.mes]);
+
     return jsonResponse({
       revenue,
       byIndustry,
+      forecastByStage,
       records: { real26: real26.length, target26: target26.length, real25: real25.length },
       updatedAt: new Date().toISOString(),
     });

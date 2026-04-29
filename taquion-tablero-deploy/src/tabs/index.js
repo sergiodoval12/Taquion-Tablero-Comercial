@@ -5,3 +5,4 @@ export { default as TabCuentas } from "./TabCuentas.jsx";
 export { default as TabPipeline } from "./TabPipeline.jsx";
 export { default as TabEquipo } from "./TabEquipo.jsx";
 export { default as TabAlertas } from "./TabAlertas.jsx";
+export { default as TabForecastCFO } from "./TabForecastCFO.jsx";

@@ -38,6 +38,7 @@ async function safeFetch(endpoint) {
 
 export default function DataProvider({ children }) {
   const [revenue, setRevenue] = useState(FALLBACK_REVENUE);
+  const [forecastByStage, setForecastByStage] = useState([]);
   const [opportunities, setOpportunities] = useState(FALLBACK_OPPORTUNITIES);
   const [won2026, setWon2026] = useState(FALLBACK_WON);
   const [accounts, setAccounts] = useState(FALLBACK_ACCOUNTS);
@@ -60,12 +61,15 @@ export default function DataProvider({ children }) {
     let anySuccess = false;
     const errors = [];
 
-    // Revenue: API returns { revenue: [...], updatedAt }
+    // Revenue: API returns { revenue: [...], forecastByStage: [...], updatedAt }
     if (revData?.revenue?.length > 0) {
       setRevenue(revData.revenue);
       anySuccess = true;
     } else if (revData === null) {
       errors.push("revenue");
+    }
+    if (revData?.forecastByStage?.length > 0) {
+      setForecastByStage(revData.forecastByStage);
     }
 
     // Opportunities: API returns { opportunities: [...], won2026: [...], updatedAt }
@@ -108,6 +112,7 @@ export default function DataProvider({ children }) {
   const value = {
     // Data
     revenue,
+    forecastByStage,
     opportunities,
     won2026,
     accounts,

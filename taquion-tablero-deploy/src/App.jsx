@@ -4,7 +4,7 @@ import DataProvider, { useData } from "./data/DataProvider.jsx";
 import LoginScreen from "./components/LoginScreen.jsx";
 import Header from "./components/Header.jsx";
 import Footer from "./components/Footer.jsx";
-import { TabResumen, TabRevenue, TabSeguimiento, TabCuentas, TabPipeline, TabEquipo, TabAlertas } from "./tabs/index.js";
+import { TabResumen, TabRevenue, TabSeguimiento, TabCuentas, TabPipeline, TabEquipo, TabAlertas, TabForecastCFO } from "./tabs/index.js";
 
 function DataStatusBar() {
   const { loading, error, source, updatedAt, refresh } = useData();
@@ -76,6 +76,7 @@ function Dashboard() {
         {activeTab === "pipeline" && <TabPipeline />}
         {activeTab === "equipo" && <TabEquipo />}
         {activeTab === "alertas" && <TabAlertas />}
+        {activeTab === "forecast-cfo" && <TabForecastCFO />}
       </div>
 
       <Footer />
