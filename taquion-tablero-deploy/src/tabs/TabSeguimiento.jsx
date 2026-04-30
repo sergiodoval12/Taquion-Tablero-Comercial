@@ -2,11 +2,11 @@ import { useState, useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { COLORS, CHART_COLORS, STAGE_COLORS, STAGE_ORDER } from "../data/constants.js";
 import { useData } from "../data/DataProvider.jsx";
-import { COMERCIALES, MODELO_COMERCIAL } from "../data/commercials.js";
+import { COMERCIALES, BO_PHANTOM, TODOS_COMERCIALES, MODELO_COMERCIAL } from "../data/commercials.js";
 import { fmtM } from "../utils/formatters.js";
 import { KPICard, ProgressBar, Badge, SectionTitle, CustomTooltip } from "../components/ui/index.js";
 
-const monthsElapsed = 3; // Q1 2026
+const monthsElapsed = 4; // YTD Apr 2026
 
 function getRoleLabel(m) {
   if (m === "CEO") return "CEO";
@@ -26,7 +26,7 @@ export default function TabSeguimiento() {
   const { opportunities: OPPORTUNITIES, won2026: WON_2026, accounts: CUENTAS_ACTIVAS } = useData();
   const [selected, setSelected] = useState(COMERCIALES[0].nombre);
 
-  const person = COMERCIALES.find(c => c.nombre === selected);
+  const person = TODOS_COMERCIALES.find(c => c.nombre === selected) || COMERCIALES[0];
 
   const stats = useMemo(() => {
     // Won deals donde participó en algún rol
@@ -97,13 +97,17 @@ export default function TabSeguimiento() {
   // Fee como porcentaje según rol
   let feeLabel = "";
   let feePct = 0;
+  const isPhantom = BO_PHANTOM.some(b => b.nombre === selected);
   if (person.modelRole === "CEO") {
-    // Como BO que origina y cierra: 2.5% ownership + 15% performance = 17.5%
     feeLabel = "17.5% (BO origina + cierra)";
     feePct = 17.5;
   } else if (person.modelRole === "GC") {
     const pctCumplimiento = targetToDate > 0 ? (stats.revenueCerrador / targetToDate) : 0;
-    if (pctCumplimiento >= 0.6) {
+    if (isPhantom) {
+      // Phantom GC: comisión fija por deal, sin target
+      feeLabel = (person.comisionPct || 7.5) + "% por deal (Phantom)";
+      feePct = person.comisionPct || 7.5;
+    } else if (pctCumplimiento >= 0.6) {
       feeLabel = "7.5% (cumple > 60% target)";
       feePct = 7.5;
     } else {
@@ -111,9 +115,92 @@ export default function TabSeguimiento() {
       feePct = 0;
     }
   } else if (person.modelRole === "BO") {
-    feeLabel = "2.5% ownership + 7.5% origen";
-    feePct = 10;
+    if (isPhantom) {
+      feeLabel = (person.comisionPct || 2.5) + "% ownership vertical";
+      feePct = person.comisionPct || 2.5;
+    } else {
+      feeLabel = "2.5% ownership + 7.5% origen";
+      feePct = 10;
+    }
   }
+
+  // ─── Cálculo de comisión a pagar ───
+  const comisionDesglose = useMemo(() => {
+    const items = [];
+    let totalComision = 0;
+
+    if (person.modelRole === "CEO") {
+      // CEO: 2.5% ownership de su vertical + 15% cuando origina y cierra
+      const ownershipRev = stats.revenueBO;
+      const ownershipFee = ownershipRev * 0.025;
+      items.push({ concepto: "Ownership vertical (2.5%)", base: ownershipRev, pct: 2.5, monto: ownershipFee });
+
+      // Deals donde originó Y cerró
+      const originaYCierra = WON_2026.filter(w => w.originador === selected && w.cerrador === selected);
+      const revOyC = originaYCierra.reduce((s, w) => s + (w.q1 || 0), 0);
+      const feeOyC = revOyC * 0.15;
+      items.push({ concepto: "Performance origina+cierra (15%)", base: revOyC, pct: 15, monto: feeOyC });
+
+      // Deals donde originó pero otro cerró
+      const originaSolo = WON_2026.filter(w => w.originador === selected && w.cerrador !== selected);
+      const revOS = originaSolo.reduce((s, w) => s + (w.q1 || 0), 0);
+      const feeOS = revOS * 0.075;
+      items.push({ concepto: "Origen sin cierre (7.5%)", base: revOS, pct: 7.5, monto: feeOS });
+
+      totalComision = ownershipFee + feeOyC + feeOS;
+    } else if (person.modelRole === "GC") {
+      if (isPhantom) {
+        // Phantom GC: comisión flat por deal cerrado
+        const pct = (person.comisionPct || 7.5) / 100;
+        const rev = stats.revenueCerrador;
+        const fee = rev * pct;
+        items.push({ concepto: `Comisión Phantom GC (${person.comisionPct || 7.5}%)`, base: rev, pct: person.comisionPct || 7.5, monto: fee });
+        totalComision = fee;
+      } else {
+        // GC operativo: 7.5% si cumple >60% target
+        const pctCumplimiento = targetToDate > 0 ? (stats.revenueCerrador / targetToDate) : 0;
+        const habilitado = pctCumplimiento >= 0.6;
+        const fijoTotal = (person.fijoMensual || 0) * monthsElapsed;
+        if (fijoTotal > 0) {
+          items.push({ concepto: "Fijo mensual × " + monthsElapsed, base: person.fijoMensual, pct: null, monto: fijoTotal });
+        }
+        if (habilitado) {
+          const comisionVar = stats.revenueCerrador * 0.075;
+          items.push({ concepto: "Variable 7.5% (habilitado)", base: stats.revenueCerrador, pct: 7.5, monto: comisionVar });
+          totalComision = fijoTotal + comisionVar;
+        } else {
+          items.push({ concepto: "Variable 7.5% (NO habilitado — <60%)", base: stats.revenueCerrador, pct: 0, monto: 0 });
+          totalComision = fijoTotal;
+        }
+        // New business originado por GC
+        const originadoPorGC = WON_2026.filter(w => w.originador === selected && w.cerrador === selected);
+        const revNB = originadoPorGC.reduce((s, w) => s + (w.q1 || 0), 0);
+        if (revNB > 0) {
+          const feeNB = revNB * 0.075;
+          items.push({ concepto: "New business originado+cerrado (7.5%)", base: revNB, pct: 7.5, monto: feeNB });
+          totalComision += feeNB;
+        }
+      }
+    } else if (person.modelRole === "BO") {
+      if (isPhantom) {
+        // BO externo: solo ownership de su vertical
+        const pct = (person.comisionPct || 2.5) / 100;
+        const rev = stats.revenueBO + stats.revenueOriginador;
+        const fee = rev * pct;
+        items.push({ concepto: `Ownership vertical (${person.comisionPct || 2.5}%)`, base: rev, pct: person.comisionPct || 2.5, monto: fee });
+        totalComision = fee;
+      } else {
+        // BO interno (COO, etc): ownership + origen
+        const ownershipFee = stats.revenueBO * 0.025;
+        items.push({ concepto: "Ownership vertical (2.5%)", base: stats.revenueBO, pct: 2.5, monto: ownershipFee });
+        const origenFee = stats.revenueOriginador * 0.075;
+        items.push({ concepto: "Origen oportunidad (7.5%)", base: stats.revenueOriginador, pct: 7.5, monto: origenFee });
+        totalComision = ownershipFee + origenFee;
+      }
+    }
+
+    return { items, totalComision };
+  }, [selected, stats, person, isPhantom]);
 
   const sortedOpps = [...stats.pipelineAll].sort((a, b) => (STAGE_ORDER[a.stage] || 99) - (STAGE_ORDER[b.stage] || 99));
 
@@ -130,29 +217,56 @@ export default function TabSeguimiento() {
 
   return (
     <div>
-      {/* Selector de comercial */}
-      <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24, flexWrap: "wrap" }}>
-        <span style={{ fontSize: 14, fontWeight: 600, color: COLORS.dark }}>Comercial:</span>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {COMERCIALES.map(c => (
-            <button
-              key={c.nombre}
-              onClick={() => setSelected(c.nombre)}
-              style={{
-                padding: "8px 16px",
-                borderRadius: 8,
-                border: selected === c.nombre ? "2px solid " + getRoleColor(c.modelRole) : "1px solid " + COLORS.lightGray,
-                background: selected === c.nombre ? getRoleColor(c.modelRole) + "10" : "white",
-                color: selected === c.nombre ? getRoleColor(c.modelRole) : COLORS.dark,
-                fontWeight: selected === c.nombre ? 700 : 400,
-                fontSize: 13,
-                cursor: "pointer",
-                transition: "all 0.2s",
-              }}
-            >
-              {c.nombre.split(" ").slice(0, 2).join(" ")}
-            </button>
-          ))}
+      {/* Selector de comercial — Equipo principal */}
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: COLORS.dark }}>Equipo Comercial:</span>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {COMERCIALES.map(c => (
+              <button
+                key={c.nombre}
+                onClick={() => setSelected(c.nombre)}
+                style={{
+                  padding: "6px 14px",
+                  borderRadius: 8,
+                  border: selected === c.nombre ? "2px solid " + getRoleColor(c.modelRole) : "1px solid " + COLORS.lightGray,
+                  background: selected === c.nombre ? getRoleColor(c.modelRole) + "10" : "white",
+                  color: selected === c.nombre ? getRoleColor(c.modelRole) : COLORS.dark,
+                  fontWeight: selected === c.nombre ? 700 : 400,
+                  fontSize: 12,
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                }}
+              >
+                {c.nombre.split(" ").slice(0, 2).join(" ")}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: COLORS.purple }}>BOs & Phantom:</span>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {BO_PHANTOM.map(c => (
+              <button
+                key={c.nombre}
+                onClick={() => setSelected(c.nombre)}
+                style={{
+                  padding: "6px 14px",
+                  borderRadius: 8,
+                  border: selected === c.nombre ? "2px solid " + (c.modelRole === "GC" ? COLORS.blue : COLORS.purple) : "1px solid " + COLORS.lightGray,
+                  background: selected === c.nombre ? (c.modelRole === "GC" ? COLORS.blue : COLORS.purple) + "10" : "white",
+                  color: selected === c.nombre ? (c.modelRole === "GC" ? COLORS.blue : COLORS.purple) : COLORS.dark,
+                  fontWeight: selected === c.nombre ? 700 : 400,
+                  fontSize: 12,
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                }}
+              >
+                {c.nombre.split(" ").slice(0, 2).join(" ")}
+                <span style={{ fontSize: 9, marginLeft: 4, opacity: 0.6 }}>{c.vertical?.split(" ")[0]}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -167,9 +281,9 @@ export default function TabSeguimiento() {
                 {getRoleLabel(person.modelRole)}
               </span>
             </div>
-            {person.verticales.length > 0 && (
+            {(person.verticales?.length > 0 || person.vertical) && (
               <div style={{ fontSize: 11, color: COLORS.gray, marginTop: 4 }}>
-                Verticales: {person.verticales.join(", ")}
+                {person.vertical ? "Vertical: " + person.vertical : "Verticales: " + person.verticales.join(", ")}
               </div>
             )}
           </div>
@@ -223,6 +337,54 @@ export default function TabSeguimiento() {
             <span style={{ color: pctTarget >= 60 && pctTarget <= 100 ? COLORS.green : COLORS.gray, fontWeight: pctTarget >= 60 ? 600 : 400 }}>60-100%: Comision 7.5%</span>
             <span style={{ color: pctTarget > 100 ? COLORS.accent : COLORS.gray }}>{">"}100%: Overachievement Pool</span>
           </div>
+        )}
+      </div>
+
+      {/* Comisión a pagar — Revenue × % del rol */}
+      <div style={{ background: "white", borderRadius: 12, padding: 24, marginBottom: 24, border: "2px solid " + (comisionDesglose.totalComision > 0 ? COLORS.teal : COLORS.lightGray) }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: COLORS.dark }}>Comisión Estimada a Pagar</div>
+            <div style={{ fontSize: 11, color: COLORS.gray }}>Basado en revenue atribuido × porcentaje del rol</div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: 28, fontWeight: 800, color: comisionDesglose.totalComision > 0 ? COLORS.teal : COLORS.gray }}>
+              {fmtM(comisionDesglose.totalComision)}
+            </div>
+            <div style={{ fontSize: 11, color: COLORS.gray }}>YTD {monthsElapsed} meses</div>
+          </div>
+        </div>
+        {comisionDesglose.items.length > 0 && (
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+            <thead>
+              <tr style={{ borderBottom: "2px solid " + COLORS.dark }}>
+                <th style={{ textAlign: "left", padding: 8 }}>Concepto</th>
+                <th style={{ textAlign: "right", padding: 8 }}>Base Revenue</th>
+                <th style={{ textAlign: "center", padding: 8 }}>%</th>
+                <th style={{ textAlign: "right", padding: 8 }}>Comisión</th>
+              </tr>
+            </thead>
+            <tbody>
+              {comisionDesglose.items.map((item, i) => (
+                <tr key={i} style={{ borderBottom: "1px solid " + COLORS.lightGray }}>
+                  <td style={{ padding: 8 }}>{item.concepto}</td>
+                  <td style={{ padding: 8, textAlign: "right", fontFamily: "monospace" }}>{fmtM(item.base)}</td>
+                  <td style={{ padding: 8, textAlign: "center", fontWeight: 600, color: COLORS.gray }}>
+                    {item.pct != null ? item.pct + "%" : "—"}
+                  </td>
+                  <td style={{ padding: 8, textAlign: "right", fontWeight: 700, color: item.monto > 0 ? COLORS.teal : COLORS.gray, fontFamily: "monospace" }}>
+                    {fmtM(item.monto)}
+                  </td>
+                </tr>
+              ))}
+              <tr style={{ borderTop: "2px solid " + COLORS.dark, background: COLORS.teal + "06" }}>
+                <td colSpan={3} style={{ padding: 8, fontWeight: 700 }}>Total a pagar</td>
+                <td style={{ padding: 8, textAlign: "right", fontWeight: 800, fontSize: 14, color: COLORS.teal, fontFamily: "monospace" }}>
+                  {fmtM(comisionDesglose.totalComision)}
+                </td>
+              </tr>
+            </tbody>
+          </table>
         )}
       </div>
 
