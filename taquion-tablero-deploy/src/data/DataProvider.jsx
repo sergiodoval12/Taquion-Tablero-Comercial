@@ -41,6 +41,9 @@ export default function DataProvider({ children }) {
   const [forecastByStage, setForecastByStage] = useState([]);
   const [opportunities, setOpportunities] = useState(FALLBACK_OPPORTUNITIES);
   const [won2026, setWon2026] = useState(FALLBACK_WON);
+  const [lostCount, setLostCount] = useState(0);
+  const [lostByCerrador, setLostByCerrador] = useState({});
+  const [avgVelocity, setAvgVelocity] = useState(null);
   const [accounts, setAccounts] = useState(FALLBACK_ACCOUNTS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -82,6 +85,9 @@ export default function DataProvider({ children }) {
     if (oppData?.won2026?.length > 0) {
       setWon2026(oppData.won2026);
     }
+    if (oppData?.lostCount != null) setLostCount(oppData.lostCount);
+    if (oppData?.lostByCerrador) setLostByCerrador(oppData.lostByCerrador);
+    if (oppData?.avgVelocity != null) setAvgVelocity(oppData.avgVelocity);
 
     // Accounts: API returns { accounts: [...], updatedAt }
     if (accData?.accounts?.length > 0) {
@@ -115,6 +121,9 @@ export default function DataProvider({ children }) {
     forecastByStage,
     opportunities,
     won2026,
+    lostCount,
+    lostByCerrador,
+    avgVelocity,
     accounts,
     // Meta
     loading,

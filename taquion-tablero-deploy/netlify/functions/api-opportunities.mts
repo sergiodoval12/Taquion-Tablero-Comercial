@@ -83,6 +83,19 @@ export default async (req: Request, context: Context) => {
         if (velocityDays < 0) velocityDays = undefined;
       }
 
+      // Determine the latest stage date for stale detection
+      const forecastDate = getProp(page, "FORECAST DATE");
+      const commitDate = getProp(page, "COMMIT DATE");
+      const lastStageDate = commitDate || forecastDate || upsideDate || pipelineDate || null;
+
+      // Days since last stage change
+      let staleDays: number | undefined;
+      if (lastStageDate) {
+        const diff = Date.now() - new Date(lastStageDate).getTime();
+        staleDays = Math.round(diff / (1000 * 60 * 60 * 24));
+        if (staleDays < 0) staleDays = 0;
+      }
+
       return {
         nombre: getProp(page, "Nombre Oportunidad") || "Sin nombre",
         stage,
@@ -94,10 +107,19 @@ export default async (req: Request, context: Context) => {
         bo: extractPerson(page, "Business Owner"),
         duracion: getProp(page, "Duración") || "",
         velocityDays,
+        staleDays,
+        pipelineDate: pipelineDate || null,
+        lastStageDate,
       };
     });
 
     opportunities.sort((a: any, b: any) => (STAGE_ORDER[a.stage] ?? 99) - (STAGE_ORDER[b.stage] ?? 99));
+
+    // ── Lost deals (for win rate calculation) ──
+    const lostFilter = {
+      property: "Estado Oportunidad",
+      select: { equals: "Lost" }
+    };
 
     // ── Won deals in 2026 ──
     const wonFilter = {
@@ -107,7 +129,10 @@ export default async (req: Request, context: Context) => {
       ]
     };
 
-    const wonPages = await notionQueryAll(DB_IDS.FUNNEL, wonFilter);
+    const [wonPages, lostPages] = await Promise.all([
+      notionQueryAll(DB_IDS.FUNNEL, wonFilter),
+      notionQueryAll(DB_IDS.FUNNEL, lostFilter),
+    ]);
     const won2026 = wonPages.map((page: any) => {
       const industrias = getProp(page, "Industrias") || [];
       const wonDate = getProp(page, "WON DATE") || "";
@@ -134,7 +159,35 @@ export default async (req: Request, context: Context) => {
       };
     });
 
-    return jsonResponse({ opportunities, won2026, updatedAt: new Date().toISOString() });
+    // Won velocity: days from Pipeline to Won
+    const wonVelocity = wonPages.map((page: any) => {
+      const pDate = getProp(page, "PIPELINE DATE");
+      const wDate = getProp(page, "WON DATE");
+      if (pDate && wDate) {
+        const days = Math.round((new Date(wDate).getTime() - new Date(pDate).getTime()) / (1000 * 60 * 60 * 24));
+        return days >= 0 ? days : null;
+      }
+      return null;
+    }).filter((d: any) => d !== null);
+
+    const avgVelocity = wonVelocity.length > 0 ? Math.round(wonVelocity.reduce((s: number, d: number) => s + d, 0) / wonVelocity.length) : null;
+
+    // Lost deals summary (for win rate)
+    const lostCount = lostPages.length;
+    const lostByCerrador: Record<string, number> = {};
+    lostPages.forEach((page: any) => {
+      const cerrador = extractPerson(page, "Cerrador de Oportunidad");
+      lostByCerrador[cerrador] = (lostByCerrador[cerrador] || 0) + 1;
+    });
+
+    return jsonResponse({
+      opportunities,
+      won2026,
+      lostCount,
+      lostByCerrador,
+      avgVelocity,
+      updatedAt: new Date().toISOString(),
+    });
   } catch (err: any) {
     console.error("api-opportunities error:", err);
     return errorResponse(err.message);

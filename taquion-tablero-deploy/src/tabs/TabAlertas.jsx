@@ -12,6 +12,9 @@ export default function TabAlertas() {
 
   const noCerrador = OPPORTUNITIES.filter(o => o.cerrador === "Sin asignar" && (o.stage === "Forecast" || o.stage === "Commit"));
   const highValueNoCerrador = OPPORTUNITIES.filter(o => o.cerrador === "Sin asignar" && o.total >= 50000000);
+  const staleDeals = OPPORTUNITIES.filter(o => o.staleDays != null && o.staleDays > 15)
+    .sort((a, b) => (b.staleDays || 0) - (a.staleDays || 0));
+  const criticalStale = staleDeals.filter(o => o.staleDays > 30);
 
   const upsellingByIndustry = {};
   upsellingOpps.forEach(o => {
@@ -22,11 +25,12 @@ export default function TabAlertas() {
 
   return (
     <div>
-      <div className="kpi-grid">
+      <div className="kpi-grid-5">
         <KPICard title="Opps Upselling" value={upsellingOpps.length} subtitle={fmtM(upsellingValue)} color={COLORS.teal} />
         <KPICard title="Opps Nuevas" value={newOpps.length} subtitle={fmtM(newValue)} color={COLORS.purple} />
-        <KPICard title="Forecast/Commit sin cerrador" value={noCerrador.length} subtitle="Requiere accion inmediata" color={COLORS.red} />
-        <KPICard title="Opps >$50M sin cerrador" value={highValueNoCerrador.length} subtitle="Alto valor sin asignar" color={COLORS.warning} />
+        <KPICard title="Sin cerrador (F/C)" value={noCerrador.length} subtitle="Requiere accion" color={COLORS.red} />
+        <KPICard title="Stale >15 dias" value={staleDeals.length} subtitle={criticalStale.length + " criticos (>30d)"} color={staleDeals.length > 0 ? COLORS.red : COLORS.green} />
+        <KPICard title=">$50M sin cerrador" value={highValueNoCerrador.length} subtitle="Alto valor" color={COLORS.warning} />
       </div>
 
       {(noCerrador.length > 0 || highValueNoCerrador.length > 0) && (
@@ -60,6 +64,39 @@ export default function TabAlertas() {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {staleDeals.length > 0 && (
+        <div>
+          <SectionTitle>{"Deals Stale — Sin movimiento >15 dias (" + staleDeals.length + ")"}</SectionTitle>
+          <div style={{ background: COLORS.warning + "08", border: "1px solid " + COLORS.warning + "40", borderRadius: 12, padding: 16, marginBottom: 16 }}>
+            <div style={{ fontSize: 12, color: COLORS.gray, marginBottom: 10 }}>
+              Estas oportunidades no cambiaron de etapa en mas de 15 dias. Requieren follow-up o decision de mover/descartar.
+            </div>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+              <thead>
+                <tr style={{ borderBottom: "2px solid " + COLORS.warning }}>
+                  <th style={{ textAlign: "left", padding: 6 }}>Oportunidad</th>
+                  <th style={{ textAlign: "center", padding: 6 }}>Etapa</th>
+                  <th style={{ textAlign: "right", padding: 6 }}>Monto</th>
+                  <th style={{ textAlign: "left", padding: 6 }}>Cerrador</th>
+                  <th style={{ textAlign: "right", padding: 6 }}>Dias stale</th>
+                </tr>
+              </thead>
+              <tbody>
+                {staleDeals.map((o, i) => (
+                  <tr key={i} style={{ borderBottom: "1px solid " + COLORS.lightGray, background: o.staleDays > 30 ? COLORS.red + "08" : "transparent" }}>
+                    <td style={{ padding: 6, fontWeight: 500 }}>{o.nombre}</td>
+                    <td style={{ padding: 6, textAlign: "center" }}><StageIndicator stage={o.stage} /></td>
+                    <td style={{ textAlign: "right", padding: 6, fontFamily: "monospace" }}>{o.total > 0 ? fmtM(o.total) : "—"}</td>
+                    <td style={{ padding: 6 }}>{o.cerrador}</td>
+                    <td style={{ textAlign: "right", padding: 6, fontWeight: 700, color: o.staleDays > 30 ? COLORS.red : COLORS.warning }}>{o.staleDays}d</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

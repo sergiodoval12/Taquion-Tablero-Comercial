@@ -1,12 +1,12 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { COLORS } from "../data/constants.js";
 import { useData } from "../data/DataProvider.jsx";
-import { COMERCIALES, MODELO_COMERCIAL } from "../data/commercials.js";
+import { COMERCIALES, MODELO_COMERCIAL, BO_VERTICALES } from "../data/commercials.js";
 import { fmtM } from "../utils/formatters.js";
 import { KPICard, ProgressBar, SectionTitle, CustomTooltip } from "../components/ui/index.js";
 
 export default function TabEquipo() {
-  const { opportunities: OPPORTUNITIES, won2026: WON_2026 } = useData();
+  const { opportunities: OPPORTUNITIES, won2026: WON_2026, lostCount, lostByCerrador, avgVelocity, accounts } = useData();
   // Revenue originado (rol principal para la atribución general)
   const wonByOriginador = {};
   WON_2026.forEach(w => {
@@ -15,6 +15,10 @@ export default function TabEquipo() {
   const wonByCerrador = {};
   WON_2026.forEach(w => {
     wonByCerrador[w.cerrador] = (wonByCerrador[w.cerrador] || 0) + (w.q1 || 0);
+  });
+  const wonCountByCerrador = {};
+  WON_2026.forEach(w => {
+    wonCountByCerrador[w.cerrador] = (wonCountByCerrador[w.cerrador] || 0) + 1;
   });
 
   const pipelineByPerson = {};
@@ -31,16 +35,26 @@ export default function TabEquipo() {
     });
   });
 
-  const monthsElapsed = 3;
+  // Win rate: Won / (Won + Lost) total and per cerrador
+  const totalWonCount = WON_2026.length;
+  const totalWinRate = (totalWonCount + lostCount) > 0 ? (totalWonCount / (totalWonCount + lostCount) * 100) : 0;
+
+  const monthsElapsed = 4; // Updated to April 2026
   const teamData = COMERCIALES.map(c => {
     const wonOrig = wonByOriginador[c.nombre] || 0;
     const wonCerr = wonByCerrador[c.nombre] || 0;
+    const wonCount = wonCountByCerrador[c.nombre] || 0;
+    const lostPersonCount = lostByCerrador[c.nombre] || 0;
+    const winRate = (wonCount + lostPersonCount) > 0 ? (wonCount / (wonCount + lostPersonCount) * 100) : null;
     const targetToDate = c.targetMensual * monthsElapsed;
     const pipe = pipelineByPerson[c.nombre] || { count: 0, value: 0 };
     return {
       ...c,
       won: wonOrig,
       wonCerr,
+      wonCount,
+      lostCount: lostPersonCount,
+      winRate,
       targetToDate,
       pctTarget: targetToDate > 0 ? (wonOrig / targetToDate * 100) : 0,
       pipelineCount: pipe.count,
@@ -48,12 +62,26 @@ export default function TabEquipo() {
     };
   });
 
+  // AM deployment: which AM has which accounts
+  const amDeployment = {};
+  (accounts || []).forEach(acc => {
+    const am = acc.am || "Sin asignar";
+    if (!amDeployment[am]) amDeployment[am] = [];
+    amDeployment[am].push(acc);
+  });
+
+  // Stale deals (>15 days)
+  const staleDeals = OPPORTUNITIES.filter(o => o.staleDays != null && o.staleDays > 15)
+    .sort((a, b) => (b.staleDays || 0) - (a.staleDays || 0));
+
   return (
     <div>
-      <div className="kpi-grid">
-        <KPICard title="Target mensual / comercial" value="$50M" subtitle="$150M acumulado Q1" color={COLORS.blue} />
-        <KPICard title="Won Q1 Total" value={fmtM(WON_2026.reduce((s, w) => s + w.total, 0))} color={COLORS.green} />
-        <KPICard title="Opps sin cerrador asignado" value={OPPORTUNITIES.filter(o => o.cerrador === "Sin asignar").length} subtitle={"De " + OPPORTUNITIES.length + " oportunidades activas"} color={COLORS.warning} />
+      <div className="kpi-grid-5">
+        <KPICard title="Target mensual / comercial" value="$50M" subtitle={"$" + (50 * monthsElapsed) + "M acumulado YTD"} color={COLORS.blue} />
+        <KPICard title="Won YTD Total" value={fmtM(WON_2026.reduce((s, w) => s + w.total, 0))} color={COLORS.green} />
+        <KPICard title="Win Rate" value={totalWinRate.toFixed(0) + "%"} subtitle={totalWonCount + " won / " + lostCount + " lost"} color={totalWinRate >= 50 ? COLORS.green : COLORS.warning} />
+        <KPICard title="Velocity Promedio" value={avgVelocity != null ? avgVelocity + " días" : "—"} subtitle="Pipeline → Won" color={COLORS.blue} />
+        <KPICard title="Deals Stale (>15d)" value={staleDeals.length} subtitle={"De " + OPPORTUNITIES.length + " activos"} color={staleDeals.length > 0 ? COLORS.red : COLORS.green} />
       </div>
 
       <SectionTitle>Performance por Comercial — Target $50M/mes</SectionTitle>
@@ -77,8 +105,10 @@ export default function TabEquipo() {
             </div>
             <ProgressBar value={t.won} max={t.targetToDate} label={"vs Target Q1: " + fmtM(t.targetToDate)} />
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: COLORS.gray, marginTop: 8 }}>
-              <span>Pipeline: {t.pipelineCount} opps</span>
-              <span>Valor pipeline: {fmtM(t.pipelineValue)}</span>
+              <span>Pipeline: {t.pipelineCount} opps ({fmtM(t.pipelineValue)})</span>
+              <span style={{ color: t.winRate != null ? (t.winRate >= 50 ? COLORS.green : COLORS.red) : COLORS.gray }}>
+                {t.winRate != null ? "Win: " + t.winRate.toFixed(0) + "% (" + t.wonCount + "W/" + t.lostCount + "L)" : "Sin datos W/L"}
+              </span>
             </div>
           </div>
         ))}
@@ -131,6 +161,70 @@ export default function TabEquipo() {
             </div>
           ))}
         </div>
+      </div>
+
+      <SectionTitle>Cobertura de Verticales — Business Owners</SectionTitle>
+      <div style={{ background: "white", borderRadius: 12, padding: 24, marginBottom: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
+          {Object.entries(BO_VERTICALES).map(([name, info]) => (
+            <div key={name} style={{
+              padding: 14, borderRadius: 8,
+              border: "1px solid " + (info.status === "activo" ? COLORS.green : COLORS.warning) + "40",
+              background: (info.status === "activo" ? COLORS.green : COLORS.warning) + "05",
+            }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.dark }}>{name}</div>
+              <div style={{ fontSize: 12, color: info.status === "activo" ? COLORS.green : COLORS.warning, fontWeight: 600, marginTop: 2 }}>{info.vertical}</div>
+              <div style={{ fontSize: 10, color: COLORS.gray, marginTop: 4 }}>
+                <span style={{
+                  padding: "1px 6px", borderRadius: 3,
+                  background: info.status === "activo" ? COLORS.green + "15" : COLORS.warning + "15",
+                  color: info.status === "activo" ? COLORS.green : COLORS.warning,
+                  fontWeight: 600,
+                }}>{info.status}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* AM Deployment */}
+      <SectionTitle>Despliegue de Account Managers</SectionTitle>
+      <div style={{ background: "white", borderRadius: 12, padding: 24, marginBottom: 24 }}>
+        {Object.keys(amDeployment).length === 0 ? (
+          <div style={{ fontSize: 13, color: COLORS.gray, textAlign: "center", padding: 20 }}>Sin datos de AMs. Verificar que la API de cuentas esté conectada.</div>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
+            {Object.entries(amDeployment).sort((a, b) => b[1].length - a[1].length).map(([am, cuentas]) => {
+              // Check if any account has upselling opportunities
+              const cuentaNames = cuentas.map(c => c.nombre);
+              const upOps = OPPORTUNITIES.filter(o => o.upselling && cuentaNames.some(n => o.nombre.toLowerCase().includes(n.toLowerCase())));
+              return (
+                <div key={am} style={{ padding: 14, borderRadius: 8, border: "1px solid " + COLORS.lightGray, background: COLORS.light }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: COLORS.dark }}>{am}</span>
+                    <span style={{ fontSize: 11, color: COLORS.gray }}>{cuentas.length} cuentas</span>
+                  </div>
+                  {cuentas.sort((a, b) => a.nombre.localeCompare(b.nombre)).map((c, i) => (
+                    <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "3px 0", fontSize: 12, borderBottom: i < cuentas.length - 1 ? "1px solid " + COLORS.lightGray : "none" }}>
+                      <span>{c.nombre}</span>
+                      <span style={{
+                        fontSize: 10, padding: "1px 6px", borderRadius: 3,
+                        background: c.tipo?.toLowerCase() === "recurrente" ? COLORS.green + "15" : COLORS.warning + "15",
+                        color: c.tipo?.toLowerCase() === "recurrente" ? COLORS.green : COLORS.warning,
+                        fontWeight: 600,
+                      }}>{c.tipo || "—"}</span>
+                    </div>
+                  ))}
+                  {upOps.length > 0 && (
+                    <div style={{ marginTop: 6, fontSize: 11, color: COLORS.teal, fontWeight: 600 }}>
+                      {upOps.length} opp(s) de upselling detectadas
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <SectionTitle>Esquema GC — Compensacion</SectionTitle>

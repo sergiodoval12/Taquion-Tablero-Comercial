@@ -9,11 +9,20 @@
 
 export const COMERCIALES = [
   { nombre: "Sergio Doval", targetMensual: 50000000, role: "CEO", modelRole: "CEO", fijoMensual: 0, verticales: ["Hype / Public Affairs", "Entretenimiento / Deportes"] },
-  { nombre: "Diego Kupferberg", targetMensual: 50000000, role: "Gerente Comercial", modelRole: "GC", fijoMensual: 3500000, verticales: ["Banca & Fintech", "Consumo Masivo"] },
-  { nombre: "Sol Rios Brinatti", targetMensual: 50000000, role: "COO", modelRole: "BO", fijoMensual: 0, verticales: ["Banca & Fintech", "Farmacéutica"] },
-  { nombre: "Diego Lajst", targetMensual: 50000000, role: "COO", modelRole: "BO", fijoMensual: 0, verticales: [] },
-  { nombre: "Ciro Garcia Resta", targetMensual: 50000000, role: "Business Owner", modelRole: "BO", fijoMensual: 0, verticales: [] },
+  { nombre: "Diego Kupferberg", targetMensual: 50000000, role: "Gerente Comercial", modelRole: "GC", fijoMensual: 3500000, verticales: ["Banca & Fintech"] },
+  { nombre: "Sol Rios Brinatti", targetMensual: 50000000, role: "COO", modelRole: "BO", fijoMensual: 0, verticales: ["Farmacéutica"] },
+  { nombre: "Diego Lajst", targetMensual: 50000000, role: "COO", modelRole: "BO", fijoMensual: 0, verticales: ["Advisory Board"] },
+  { nombre: "Ciro Garcia Resta", targetMensual: 50000000, role: "Business Owner", modelRole: "BO", fijoMensual: 0, verticales: ["Real Estate / Urbanismo"] },
+  { nombre: "Matías Fermín", targetMensual: 50000000, role: "Phantom GC", modelRole: "GC", fijoMensual: 0, verticales: ["Banca & Fintech"] },
 ];
+
+// Asignación de Business Owners a verticales (actualizado 27/04/2026)
+export const BO_VERTICALES = {
+  "Mariana": { vertical: "Consumo Masivo", status: "activo" },
+  "Ciro Garcia Resta": { vertical: "Real Estate / Urbanismo", status: "activo" },
+  "Pablo": { vertical: "Banking / Vintage", status: "activo" },
+  "Diego Kupferberg": { vertical: "En tratativas", status: "pendiente" },
+};
 
 // ─── REGLAS DEL MODELO COMERCIAL ──────────────────────────────
 // Pool máximo distribuible: 20% del revenue por oportunidad
