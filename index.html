@@ -462,35 +462,35 @@
         const { useState } = React;
         const { BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } = Recharts;
 
-        // Data — Actualizado: 22 de Abril 2026 (fuente: Notion CRM Taquion)
+        // Data — Actualizado: 3 de Mayo 2026 (fuente: Notion CRM Taquion)
         const monthlyData = [
-            { mes: 'Ene', real: 337.98, costos: 221.85, target: 200 },
-            { mes: 'Feb', real: 207.06, costos: 211.55, target: 200 },
-            { mes: 'Mar', real: 506.98, costos: 182.44, target: 250 },
-            { mes: 'Abr', real: 619.98, costos: 182.61, target: 250 },
-            { mes: 'May', real: 627.18, costos: 182.76, target: 300 },
-            { mes: 'Jun', real: 429.19, costos: 226.60, target: 300 },
-            { mes: 'Jul', real: 398.38, costos: 206.88, target: 350 },
-            { mes: 'Ago', real: 380.78, costos: 209.83, target: 400 },
-            { mes: 'Sep', real: 370.99, costos: 210.09, target: 450 },
-            { mes: 'Oct', real: 357.00, costos: 210.35, target: 450 },
-            { mes: 'Nov', real: 370.20, costos: 210.62, target: 500 },
-            { mes: 'Dic', real: 340.22, costos: 261.16, target: 550 },
+            { mes: 'Ene', real: 337.07, costos: 220.78, target: 200 },
+            { mes: 'Feb', real: 207.25, costos: 215.69, target: 200 },
+            { mes: 'Mar', real: 510.85, costos: 220.09, target: 250 },
+            { mes: 'Abr', real: 488.80, costos: 227.04, target: 250 },
+            { mes: 'May', real: 675.91, costos: 238.17, target: 300 },
+            { mes: 'Jun', real: 461.28, costos: 279.03, target: 300 },
+            { mes: 'Jul', real: 464.96, costos: 264.67, target: 350 },
+            { mes: 'Ago', real: 428.86, costos: 266.72, target: 400 },
+            { mes: 'Sep', real: 419.08, costos: 268.74, target: 450 },
+            { mes: 'Oct', real: 406.56, costos: 269.28, target: 450 },
+            { mes: 'Nov', real: 379.76, costos: 271.39, target: 500 },
+            { mes: 'Dic', real: 389.78, costos: 302.28, target: 550 },
         ];
 
         const quarterlyData = [
-            { q: 'Q1', ponderado: 1052.02, target: 650, achievement: 162 },
-            { q: 'Q2', ponderado: 1676.35, target: 850, achievement: 197 },
-            { q: 'Q3', ponderado: 1150.15, target: 1200, achievement: 96 },
-            { q: 'Q4', ponderado: 1067.42, target: 1500, achievement: 71 },
+            { q: 'Q1', ponderado: 1055.17, target: 650, achievement: 162 },
+            { q: 'Q2', ponderado: 1625.99, target: 850, achievement: 191 },
+            { q: 'Q3', ponderado: 1312.90, target: 1200, achievement: 109 },
+            { q: 'Q4', ponderado: 1176.10, target: 1500, achievement: 78 },
         ];
 
         const funnelData = [
-            { stage: 'Won', value: 2942.04 },
-            { stage: 'Upside', value: 1531.30 },
-            { stage: 'Forecast', value: 190.18 },
-            { stage: 'Pipeline', value: 836.80 },
-            { stage: 'Commit', value: 647.63 },
+            { stage: 'Won', value: 2987.39 },
+            { stage: 'Upside', value: 1449.10 },
+            { stage: 'Forecast', value: 13.18 },
+            { stage: 'Pipeline', value: 824.12 },
+            { stage: 'Commit', value: 180.00 },
             { stage: 'Lead', value: 30.00 },
         ];
 
@@ -527,45 +527,38 @@
         const pipelineQ2 = [
             { nombre: 'Talk About + IPlan', ticketTotal: 351, inicio: 'Q2', industria: 'Tecnología / IA', etapa: 'Pipeline', comercial: null, originador: null, unidadNegocio: ['Inspire', 'Ignite', 'Insights'] },
             { nombre: 'Comunidad Vecinos + GCBA', ticketTotal: 300, inicio: 'Q2', industria: 'Public Affairs', etapa: 'Upside', comercial: null, originador: null, unidadNegocio: ['Inspire', 'Ignite', 'Insights'] },
-            { nombre: 'Comunidades + Todo un País <> San Luis Gobierno', ticketTotal: 300, inicio: 'Q2', industria: 'Public Affairs', etapa: 'Commit', comercial: null, originador: null, unidadNegocio: ['Inspire', 'Ignite', 'Insights'] },
-            { nombre: 'Cámara Medios de Pago', ticketTotal: 177, inicio: 'Q2', industria: 'Public Affairs', etapa: 'Forecast', comercial: null, originador: null, unidadNegocio: ['Insights', 'Inspire', 'Ignite'] },
-            { nombre: 'Construcción Medio + Enfoque Federal', ticketTotal: 168, inicio: 'Q2', industria: 'Public Affairs', etapa: 'Commit', comercial: null, originador: null, unidadNegocio: ['Inspire'] },
-            { nombre: 'Social Listening + LOTBA', ticketTotal: 150, inicio: 'Q2', industria: 'Public Affairs', etapa: 'Upside', comercial: null, originador: null, unidadNegocio: ['Insights', 'Ignite'] },
+            { nombre: 'Comunidades + RESTART', ticketTotal: 180, inicio: 'Q2', industria: 'Tecnología / IA', etapa: 'Commit', comercial: null, originador: null, unidadNegocio: ['Inspire', 'Ignite', 'Insights'] },
             { nombre: 'Estrategia + Creatividad + Ejecución + Restart', ticketTotal: 150, inicio: 'Q2', industria: 'Tecnología / IA', etapa: 'Upside', comercial: null, originador: null, unidadNegocio: ['Inspire', 'Ignite'] },
             { nombre: 'Comunidad AI + GCBA', ticketTotal: 150, inicio: 'Q2', industria: 'Tecnología / IA', etapa: 'Upside', comercial: null, originador: null, unidadNegocio: ['Inspire', 'Ignite', 'Insights'] },
-            { nombre: 'Investigacion/Ignite + Tres Ases', ticketTotal: 126, inicio: 'Q2', industria: 'Consumo Masivo', etapa: 'Upside', comercial: null, originador: null, unidadNegocio: ['Insights', 'Ignite'] },
+            { nombre: 'Investigacion/Ignite + Tres Ases', ticketTotal: 126, inicio: 'Q2', industria: 'Consumo Masivo', etapa: 'Upside', comercial: null, originador: null, unidadNegocio: ['Insights', 'Ignite', 'Inspire'] },
+            { nombre: 'Branding + Credicuotas', ticketTotal: 120, inicio: 'Q2', industria: 'Banca & Fintech', etapa: 'Upside', comercial: null, originador: null, unidadNegocio: ['Inspire'] },
             { nombre: 'Strategic Growth + Poltron', ticketTotal: 110, inicio: 'Q2', industria: 'Otro', etapa: 'Upside', comercial: null, originador: null, unidadNegocio: ['Inspire', 'Ignite', 'Insights'] },
             { nombre: 'Comunidades + Farmapay', ticketTotal: 100, inicio: 'Q2', industria: 'Banca & Fintech', etapa: 'Upside', comercial: null, originador: null, unidadNegocio: ['Inspire'] },
             { nombre: 'Comunidad + Grupo Gaman', ticketTotal: 100, inicio: 'Q2', industria: 'Seguros', etapa: 'Pipeline', comercial: null, originador: null, unidadNegocio: ['Inspire', 'Ignite', 'Insights'] },
             { nombre: 'Estrategia / Creatividad + Pet Food Saladillo', ticketTotal: 100, inicio: 'Q2', industria: 'Consumo Masivo', etapa: 'Upside', comercial: null, originador: null, unidadNegocio: ['Inspire', 'Ignite', 'Insights'] },
-            { nombre: 'Web y Pauta + San Luis Turismo', ticketTotal: 86.6, inicio: 'Q2', industria: 'Turismo', etapa: 'Commit', comercial: null, originador: null, unidadNegocio: ['Inspire'] },
-            { nombre: 'Campaña + AFA', ticketTotal: 75, inicio: 'Q2', industria: 'Entretenimiento / Deportes', etapa: 'Pipeline', comercial: null, originador: null, unidadNegocio: ['Insights'] },
+            { nombre: 'Campaña + AFA', ticketTotal: 75, inicio: 'Q2', industria: 'Entretenimiento / Deportes', etapa: 'Pipeline', comercial: null, originador: null, unidadNegocio: ['Inspire'] },
             { nombre: 'Comunidad + Lotba', ticketTotal: 70, inicio: 'Q2', industria: 'Public Affairs', etapa: 'Upside', comercial: null, originador: null, unidadNegocio: ['Inspire', 'Ignite', 'Insights'] },
-            { nombre: 'Upselling + Bind', ticketTotal: 67, inicio: 'Q2', industria: 'Banca & Fintech', etapa: 'Pipeline', comercial: null, originador: null, unidadNegocio: ['Insights'] },
-            { nombre: 'MAPA + CUF (Cámara Uruguaya Fintech)', ticketTotal: 63, inicio: 'Q2', industria: 'Banca & Fintech', etapa: 'Pipeline', comercial: null, originador: null, unidadNegocio: ['Inspire', 'Ignite', 'Insights'] },
+            { nombre: 'Upselling + Bind', ticketTotal: 67, inicio: 'Q2', industria: 'Banca & Fintech', etapa: 'Pipeline', comercial: null, originador: null, unidadNegocio: ['Inspire'] },
+            { nombre: 'MAPA + CUF (Cámara Uruguaya Fintech)', ticketTotal: 63, inicio: 'Q2', industria: 'Banca & Fintech', etapa: 'Pipeline', comercial: null, originador: null, unidadNegocio: ['Insights', 'Inspire'] },
             { nombre: 'Escucha Social + Aerolíneas Argentinas', ticketTotal: 61.2, inicio: 'Q2', industria: 'Turismo', etapa: 'Upside', comercial: null, originador: null, unidadNegocio: ['Insights'] },
-            { nombre: 'Investigación + Restart', ticketTotal: 60, inicio: 'Q2', industria: 'Tecnología / IA', etapa: 'Pipeline', comercial: null, originador: null, unidadNegocio: ['Insights'] },
-            { nombre: 'Campaña Turismo + San Luis', ticketTotal: 60, inicio: 'Q2', industria: 'Turismo', etapa: 'Commit', comercial: null, originador: null, unidadNegocio: ['Inspire', 'Ignite'] },
-            { nombre: 'Comunidades + RESTART', ticketTotal: 45, inicio: 'Q2', industria: 'Tecnología / IA', etapa: 'Upside', comercial: null, originador: null, unidadNegocio: ['Inspire'] },
+            { nombre: 'Investigación + Restart', ticketTotal: 60, inicio: 'Q2', industria: 'Tecnología / IA', etapa: 'Pipeline', comercial: null, originador: null, unidadNegocio: ['Insights', 'Inspire'] },
             { nombre: 'Investigación + Lotba', ticketTotal: 41, inicio: 'Q2', industria: 'Public Affairs', etapa: 'Upside', comercial: null, originador: null, unidadNegocio: ['Insights'] },
             { nombre: 'Campaña + Oscar Herrera Ahuad', ticketTotal: 30, inicio: 'Q2', industria: 'Public Affairs', etapa: 'Lead', comercial: null, originador: null, unidadNegocio: ['Inspire'] },
             { nombre: 'Solución B&F + Personal Pay', ticketTotal: 30, inicio: 'Q2', industria: 'Banca & Fintech', etapa: 'Pipeline', comercial: null, originador: null, unidadNegocio: ['Inspire', 'Ignite', 'Insights'] },
             { nombre: 'Exploración + On City', ticketTotal: 30, inicio: 'Q2', industria: 'Otro', etapa: 'Upside', comercial: null, originador: null, unidadNegocio: ['Inspire', 'Ignite', 'Insights'] },
-            { nombre: 'Personal Pay', ticketTotal: 25, inicio: 'Q2', industria: 'Banca & Fintech', etapa: 'Upside', comercial: null, originador: null, unidadNegocio: ['Insights'] },
             { nombre: 'Exploración + Al Mundo', ticketTotal: 25, inicio: 'Q2', industria: 'Turismo', etapa: 'Pipeline', comercial: null, originador: null, unidadNegocio: ['Inspire'] },
             { nombre: 'Campaña Concientización + ALEA', ticketTotal: 25, inicio: 'Q2', industria: 'Otro', etapa: 'Pipeline', comercial: null, originador: null, unidadNegocio: ['Inspire'] },
-            { nombre: 'Acompañamiento Estratégico + Potrero Encanta', ticketTotal: 21, inicio: 'Q2', industria: 'Turismo', etapa: 'Commit', comercial: null, originador: null, unidadNegocio: ['Inspire'] },
+            { nombre: 'Investigación Juego legal + ALEA', ticketTotal: 25, inicio: 'Q2', industria: 'Otro', etapa: 'Upside', comercial: null, originador: null, unidadNegocio: ['Insights'] },
             { nombre: 'Investigación + E. Gigena (Wallet B2B)', ticketTotal: 19.5, inicio: 'Q2', industria: 'Consumo Masivo', etapa: 'Upside', comercial: null, originador: null, unidadNegocio: ['Insights'] },
             { nombre: 'Investigación + BIND PSP', ticketTotal: 18.7, inicio: 'Q2', industria: 'Banca & Fintech', etapa: 'Upside', comercial: null, originador: null, unidadNegocio: ['Insights'] },
-            { nombre: 'Leasing Argentina', ticketTotal: 18, inicio: 'Q2', industria: 'Banca & Fintech', etapa: 'Pipeline', comercial: null, originador: null, unidadNegocio: ['Insights'] },
             { nombre: 'Investigación + Medición Candidatos', ticketTotal: 14.7, inicio: 'Q2', industria: 'Public Affairs', etapa: 'Upside', comercial: null, originador: null, unidadNegocio: ['Insights'] },
-            { nombre: 'Campaña Digital + San Luis', ticketTotal: 12, inicio: 'Q2', industria: 'Public Affairs', etapa: 'Commit', comercial: null, originador: null, unidadNegocio: ['Inspire'] },
-            { nombre: 'Posicionamiento + Suterh', ticketTotal: 11, inicio: 'Q2', industria: 'Public Affairs', etapa: 'Pipeline', comercial: null, originador: null, unidadNegocio: ['Insights', 'Inspire'] },
-            { nombre: 'Estrategia + ALEA', ticketTotal: 10.2, inicio: 'Q2', industria: 'Otro', etapa: 'Upside', comercial: null, originador: null, unidadNegocio: ['Inspire'] },
+            { nombre: 'Posicionamiento + Suterh', ticketTotal: 11, inicio: 'Q2', industria: 'Public Affairs', etapa: 'Pipeline', comercial: null, originador: null, unidadNegocio: ['Inspire'] },
             { nombre: 'Investigación + Partido Político', ticketTotal: 10, inicio: 'Q2', industria: 'Public Affairs', etapa: 'Upside', comercial: null, originador: null, unidadNegocio: ['Insights'] },
             { nombre: 'Comunidades + Corrientes', ticketTotal: 10, inicio: 'Q2', industria: 'Public Affairs', etapa: 'Pipeline', comercial: null, originador: null, unidadNegocio: ['Inspire'] },
             { nombre: 'Investigación + Gob. Córdoba', ticketTotal: 8.98, inicio: 'Q2', industria: 'Public Affairs', etapa: 'Forecast', comercial: null, originador: null, unidadNegocio: ['Insights'] },
+            { nombre: 'Investigación + Wave Brands (Logística Perú)', ticketTotal: 5.32, inicio: 'Q2', industria: 'Otro', etapa: 'Pipeline', comercial: null, originador: null, unidadNegocio: ['Insights'] },
             { nombre: 'Insights + Jorge Giaccaglia', ticketTotal: 4.2, inicio: 'Q2', industria: 'Entretenimiento / Deportes', etapa: 'Forecast', comercial: null, originador: null, unidadNegocio: ['Insights'] },
+            { nombre: 'Evento Lanzamiento Holmberg + Rosbaco', ticketTotal: 3, inicio: 'Q2', industria: 'Real Estate', etapa: 'Upside', comercial: null, originador: null, unidadNegocio: ['Inspire'] },
             { nombre: 'SL + Moiguer', ticketTotal: 1.8, inicio: 'Q2', industria: 'Otro', etapa: 'Pipeline', comercial: null, originador: null, unidadNegocio: ['Insights'] },
         ];
 
@@ -599,9 +592,9 @@
         };
 
         const ResumenEjecutivo = () => {
-            const ytdReal = 1052.01;
+            const ytdReal = 1055.17;
             const targetAnual = 4200;
-            const avancePercent = Math.round((4337.47 / 4200) * 100);
+            const avancePercent = Math.round((5170.16 / 4200) * 100);
             const cuentasCount = cuentasActivas.length;
             const pipelineTotal = pipelineQ2.reduce((sum, p) => sum + p.ticketTotal, 0);
 
@@ -1261,7 +1254,7 @@
                             </div>
                         </div>
                         <div className="header-right">
-                            <span>Última actualización: 9 abril 2026</span>
+                            <span>Última actualización: 3 mayo 2026</span>
                         </div>
                     </header>
 
@@ -1282,7 +1275,7 @@
                     </div>
 
                     <footer className="footer">
-                        Fuente: Notion CRM Taquion — Forecast + Funnel/Oportunidades | Actualizado: 22 de Abril 2026
+                        Fuente: Notion CRM Taquion — Forecast + Funnel/Oportunidades | Actualizado: 3 de Mayo 2026
                     </footer>
                 </div>
             );
