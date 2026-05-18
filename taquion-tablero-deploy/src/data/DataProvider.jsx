@@ -38,6 +38,9 @@ async function safeFetch(endpoint) {
 
 export default function DataProvider({ children }) {
   const [revenue, setRevenue] = useState(FALLBACK_REVENUE);
+  const [revenue2027, setRevenue2027] = useState([]);
+  const [targetAdjusted, setTargetAdjusted] = useState({});
+  const [carryForward, setCarryForward] = useState(0);
   const [forecastByStage, setForecastByStage] = useState([]);
   const [opportunities, setOpportunities] = useState(FALLBACK_OPPORTUNITIES);
   const [won2026, setWon2026] = useState(FALLBACK_WON);
@@ -64,12 +67,21 @@ export default function DataProvider({ children }) {
     let anySuccess = false;
     const errors = [];
 
-    // Revenue: API returns { revenue: [...], forecastByStage: [...], updatedAt }
+    // Revenue: API returns { revenue, revenue2027, targetAdjusted, carryForward, forecastByStage, updatedAt }
     if (revData?.revenue?.length > 0) {
       setRevenue(revData.revenue);
       anySuccess = true;
     } else if (revData === null) {
       errors.push("revenue");
+    }
+    if (revData?.revenue2027?.length > 0) {
+      setRevenue2027(revData.revenue2027);
+    }
+    if (revData?.targetAdjusted) {
+      setTargetAdjusted(revData.targetAdjusted);
+    }
+    if (revData?.carryForward != null) {
+      setCarryForward(revData.carryForward);
     }
     if (revData?.forecastByStage?.length > 0) {
       setForecastByStage(revData.forecastByStage);
@@ -118,6 +130,9 @@ export default function DataProvider({ children }) {
   const value = {
     // Data
     revenue,
+    revenue2027,
+    targetAdjusted,
+    carryForward,
     forecastByStage,
     opportunities,
     won2026,

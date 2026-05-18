@@ -1,4 +1,4 @@
-// ─── EQUIPO COMERCIAL (Actualizado 2026-04-09) ──────────────────
+// ─── EQUIPO COMERCIAL (Actualizado 2026-05-18) ──────────────────
 // Roles corregidos según estructura real de Taquion:
 // - Diego Kupferberg es el UNICO Gerente Comercial (GC)
 // - Sergio Doval = CEO
@@ -27,6 +27,7 @@ export const BO_PHANTOM = [
   { nombre: "Ciro Garcia Resta", role: "Business Owner", modelRole: "BO", vertical: "Real Estate / Urbanismo", comisionPct: 2.5, status: "activo" },
   { nombre: "Mariana Gallo Sacerdote", role: "Business Owner", modelRole: "BO", vertical: "Consumo Masivo", comisionPct: 2.5, status: "activo" },
   { nombre: "Matías Fermín", role: "Phantom GC", modelRole: "GC", vertical: "Banca & Fintech", comisionPct: 7.5, status: "activo" },
+  { nombre: "Eugenio Gigena", role: "Business Owner", modelRole: "BO", vertical: "por asignar", comisionPct: 2.5, status: "activo" },
 ];
 
 // ─── TODOS LOS COMERCIALES (para selectors y búsquedas) ─────
@@ -38,6 +39,7 @@ export const BO_VERTICALES = {
   "Ciro Garcia Resta": { vertical: "Real Estate / Urbanismo", status: "activo" },
   "Mariana Gallo Sacerdote": { vertical: "Consumo Masivo", status: "activo" },
   "Matías Fermín": { vertical: "Banca & Fintech (Phantom GC)", status: "activo" },
+  "Eugenio Gigena": { vertical: "por asignar", status: "activo" },
 };
 
 // ─── REGLAS DEL MODELO COMERCIAL ──────────────────────────────

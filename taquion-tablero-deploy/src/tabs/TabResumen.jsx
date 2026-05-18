@@ -5,7 +5,7 @@ import { fmtM } from "../utils/formatters.js";
 import { KPICard, SectionTitle, CustomTooltip, DetailTooltip } from "../components/ui/index.js";
 
 export default function TabResumen() {
-  const { revenue: REVENUE_2026, opportunities: OPPORTUNITIES, accounts: CUENTAS_ACTIVAS } = useData();
+  const { revenue: REVENUE_2026, revenue2027, targetAdjusted, carryForward, opportunities: OPPORTUNITIES, accounts: CUENTAS_ACTIVAS } = useData();
 
   const q1Real = REVENUE_2026.slice(0, 3).reduce((s, m) => s + m.real, 0);
   const q1Target = REVENUE_2026.slice(0, 3).reduce((s, m) => s + m.target, 0);
@@ -13,8 +13,22 @@ export default function TabResumen() {
   const annualWon = REVENUE_2026.reduce((s, m) => s + (m.real || 0), 0);
   const annualTarget = REVENUE_2026.reduce((s, m) => s + m.target, 0);
 
-  // Chart data: solo Won (real) por mes
-  const chartData = REVENUE_2026;
+  // 18-month chart: Jul 2026 – Jun 2027
+  const chartData18 = [
+    ...REVENUE_2026.map(m => ({
+      ...m,
+      label: m.mes + (m.year === 2026 ? "" : " '" + String(m.year || 26).slice(-2)),
+      targetAdj: m.target + (targetAdjusted[m.mes] || 0),
+    })),
+    ...revenue2027.map(m => ({
+      ...m,
+      label: m.mes + " '27",
+      targetAdj: m.target,
+    })),
+  ];
+
+  // Chart data: full 18 months if 2027 data available, else 2026 only
+  const chartData = chartData18;
 
   const commitValue = OPPORTUNITIES.filter(o => o.stage === "Commit").reduce((s, o) => s + o.total, 0);
   const forecastValue = OPPORTUNITIES.filter(o => o.stage === "Forecast").reduce((s, o) => s + o.total, 0);
@@ -65,20 +79,27 @@ export default function TabResumen() {
 
       <div className="grid-2col">
         <div style={{ background: "white", borderRadius: 12, padding: 24 }}>
-          <h3 style={{ fontSize: 15, fontWeight: 600, color: COLORS.dark, marginBottom: 16 }}>Revenue Mensual 2026 vs Target vs 2025</h3>
-          <ResponsiveContainer width="100%" height={280}>
+          <h3 style={{ fontSize: 15, fontWeight: 600, color: COLORS.dark, marginBottom: 16 }}>
+            Revenue Mensual {revenue2027.length > 0 ? "2026-2027" : "2026"} vs Target vs 2025
+            {carryForward > 0 && <span style={{ fontSize: 11, fontWeight: 400, color: COLORS.warning, marginLeft: 8 }}>Carry-forward: {fmtM(carryForward)}</span>}
+          </h3>
+          <ResponsiveContainer width="100%" height={320}>
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="mes" tick={{ fontSize: 11 }} />
+              <XAxis dataKey="label" tick={{ fontSize: 10 }} interval={0} angle={revenue2027.length > 0 ? -45 : 0} textAnchor={revenue2027.length > 0 ? "end" : "middle"} height={revenue2027.length > 0 ? 50 : 30} />
               <YAxis tick={{ fontSize: 11 }} tickFormatter={fmtM} />
               <Tooltip content={<CustomTooltip />} />
               <Legend wrapperStyle={{ fontSize: 11 }} />
-              <Bar dataKey="real" name="2026 Real (Won)" fill={COLORS.accent} radius={[4, 4, 0, 0]} />
-              <Bar dataKey="target" name="Target" fill={COLORS.lightGray} radius={[4, 4, 0, 0]} />
-              <Bar dataKey="r2025" name="2025 Real" fill={COLORS.blue + "60"} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="real" name="Real (Won)" fill={COLORS.accent} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="target" name="Target Original" fill={COLORS.lightGray} radius={[4, 4, 0, 0]} />
+              {carryForward > 0 && <Bar dataKey="targetAdj" name="Target Ajustado" fill={COLORS.warning + "80"} radius={[4, 4, 0, 0]} />}
+              {!revenue2027.length && <Bar dataKey="r2025" name="2025 Real" fill={COLORS.blue + "60"} radius={[4, 4, 0, 0]} />}
             </BarChart>
           </ResponsiveContainer>
-          <div style={{ fontSize: 11, color: COLORS.gray, marginTop: 4 }}>* Solo revenue de deals Won (Monto Mensual)</div>
+          <div style={{ fontSize: 11, color: COLORS.gray, marginTop: 4 }}>
+            * Solo revenue de deals Won (Monto Mensual) | Compañía: Taquion | Moneda: ARS
+            {revenue2027.length > 0 && " | Vista 18 meses"}
+          </div>
         </div>
 
         <div>

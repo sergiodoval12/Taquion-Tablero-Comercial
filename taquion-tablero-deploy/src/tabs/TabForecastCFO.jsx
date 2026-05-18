@@ -50,7 +50,7 @@ function ForecastTooltip({ active, payload, label }) {
 }
 
 export default function TabForecastCFO() {
-  const { forecastByStage, revenue } = useData();
+  const { forecastByStage, revenue, targetAdjusted, carryForward } = useData();
 
   // Quarter aggregation
   const quarters = [
@@ -71,7 +71,8 @@ export default function TabForecastCFO() {
       const revMonth = revenue.find(r => r.mes === mes);
       return s + (revMonth?.target || 0);
     }, 0);
-    return { ...q, won, commit, forecast, upside, ponderado, target };
+    const targetAdj = target + q.months.reduce((s, mes) => s + (targetAdjusted[mes] || 0), 0);
+    return { ...q, won, commit, forecast, upside, ponderado, target, targetAdj };
   });
 
   const totalAnual = {
@@ -81,6 +82,7 @@ export default function TabForecastCFO() {
     upside: qData.reduce((s, q) => s + q.upside, 0),
     ponderado: qData.reduce((s, q) => s + q.ponderado, 0),
     target: qData.reduce((s, q) => s + q.target, 0),
+    targetAdj: qData.reduce((s, q) => s + q.targetAdj, 0),
   };
 
   // Scenarios
@@ -105,6 +107,13 @@ export default function TabForecastCFO() {
       <div style={{ background: COLORS.blue + "10", border: "1px solid " + COLORS.blue + "30", borderRadius: 8, padding: "12px 16px", marginBottom: 20, fontSize: 12, color: COLORS.dark, lineHeight: 1.6 }}>
         <strong>Vista para CFO</strong> — Distribución mensual del ingreso por estado de oportunidad. Won = cerrado (100%), Commit = por firmar (90%), Forecast = avanzado (75%), Upside = potencial (40%). El "Ponderado" aplica estas probabilidades al monto bruto de cada deal.
       </div>
+
+      {/* Carry-forward callout */}
+      {carryForward > 0 && (
+        <div style={{ background: COLORS.warning + "15", border: "1px solid " + COLORS.warning + "40", borderRadius: 8, padding: "12px 16px", marginBottom: 20, fontSize: 12, color: COLORS.dark, lineHeight: 1.6 }}>
+          <strong>Carry-forward activo:</strong> {fmtM(carryForward)} de target no alcanzado en quarters pasados fue redistribuido a los quarters futuros. La columna "Target Ajust." refleja el target original + la porción redistribuida.
+        </div>
+      )}
 
       {/* KPI cards: 3 scenarios */}
       <div className="kpi-grid" style={{ marginBottom: 24 }}>
@@ -169,12 +178,14 @@ export default function TabForecastCFO() {
               <th style={{ textAlign: "right", padding: 8, color: STAGE_COLORS.upside }}>Upside</th>
               <th style={{ textAlign: "right", padding: 8, fontWeight: 700 }}>Ponderado</th>
               <th style={{ textAlign: "right", padding: 8, color: COLORS.gray }}>Target</th>
+              {carryForward > 0 && <th style={{ textAlign: "right", padding: 8, color: COLORS.warning }}>Target Ajust.</th>}
               <th style={{ textAlign: "right", padding: 8 }}>% Target</th>
             </tr>
           </thead>
           <tbody>
             {qData.map(q => {
-              const pct = q.target > 0 ? (q.ponderado / q.target * 100) : 0;
+              const pctBase = q.target > 0 ? (q.ponderado / q.target * 100) : 0;
+              const pct = carryForward > 0 && q.targetAdj > 0 ? (q.ponderado / q.targetAdj * 100) : pctBase;
               return (
                 <tr key={q.name} style={{ borderBottom: "1px solid " + COLORS.lightGray }}>
                   <td style={{ padding: 8, fontWeight: 600 }}>{q.name}</td>
@@ -184,6 +195,7 @@ export default function TabForecastCFO() {
                   <td style={{ textAlign: "right", padding: 8 }}>{fmtM(q.upside)}</td>
                   <td style={{ textAlign: "right", padding: 8, fontWeight: 700 }}>{fmtM(q.ponderado)}</td>
                   <td style={{ textAlign: "right", padding: 8, color: COLORS.gray }}>{fmtM(q.target)}</td>
+                  {carryForward > 0 && <td style={{ textAlign: "right", padding: 8, color: q.targetAdj > q.target ? COLORS.warning : COLORS.gray, fontWeight: q.targetAdj > q.target ? 600 : 400 }}>{fmtM(q.targetAdj)}</td>}
                   <td style={{ textAlign: "right", padding: 8, fontWeight: 600, color: pct >= 100 ? COLORS.green : pct >= 80 ? COLORS.warning : COLORS.red }}>{pct.toFixed(0)}%</td>
                 </tr>
               );
@@ -197,6 +209,7 @@ export default function TabForecastCFO() {
               <td style={{ textAlign: "right", padding: 8 }}>{fmtM(totalAnual.upside)}</td>
               <td style={{ textAlign: "right", padding: 8, color: COLORS.accent }}>{fmtM(totalAnual.ponderado)}</td>
               <td style={{ textAlign: "right", padding: 8, color: COLORS.gray }}>{fmtM(totalAnual.target)}</td>
+              {carryForward > 0 && <td style={{ textAlign: "right", padding: 8, color: COLORS.warning }}>{fmtM(totalAnual.targetAdj)}</td>}
               <td style={{ textAlign: "right", padding: 8, color: totalAnual.target > 0 && (totalAnual.ponderado / totalAnual.target * 100) >= 80 ? COLORS.green : COLORS.red }}>
                 {totalAnual.target > 0 ? (totalAnual.ponderado / totalAnual.target * 100).toFixed(0) + "%" : "—"}
               </td>
