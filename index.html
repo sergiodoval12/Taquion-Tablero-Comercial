@@ -462,35 +462,35 @@
         const { useState } = React;
         const { BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } = Recharts;
 
-        // Data — Actualizado: 14 de Mayo 2026 (fuente: Notion CRM Taquion)
+        // Data — Actualizado: 18 de Mayo 2026 (fuente: Notion CRM Taquion)
         const monthlyData = [
-            { mes: 'Ene', real: 337.07, real2025: 209.01, costos: 220.78, target: 200 },
-            { mes: 'Feb', real: 207.25, real2025: 192.28, costos: 215.69, target: 200 },
-            { mes: 'Mar', real: 510.85, real2025: 153.42, costos: 220.09, target: 250 },
-            { mes: 'Abr', real: 492.45, real2025: 317.19, costos: 227.04, target: 250 },
-            { mes: 'May', real: 614.08, real2025: 418.49, costos: 238.17, target: 300 },
-            { mes: 'Jun', real: 477.41, real2025: 569.28, costos: 279.03, target: 300 },
-            { mes: 'Jul', real: 496.09, real2025: 274.58, costos: 264.67, target: 350 },
-            { mes: 'Ago', real: 469.99, real2025: 303.54, costos: 266.72, target: 400 },
-            { mes: 'Sep', real: 460.21, real2025: 386.67, costos: 268.74, target: 450 },
-            { mes: 'Oct', real: 447.69, real2025: 527.57, costos: 269.28, target: 450 },
-            { mes: 'Nov', real: 460.19, real2025: 673.37, costos: 271.39, target: 500 },
-            { mes: 'Dic', real: 496.02, real2025: 640.08, costos: 302.28, target: 550 },
+            { mes: 'Ene', real: 314.57, real2025: 209.01, costos: 220.78, target: 200 },
+            { mes: 'Feb', real: 190.45, real2025: 192.28, costos: 215.69, target: 200 },
+            { mes: 'Mar', real: 487.65, real2025: 153.42, costos: 222.44, target: 250 },
+            { mes: 'Abr', real: 469.25, real2025: 317.19, costos: 216.81, target: 250 },
+            { mes: 'May', real: 575.88, real2025: 418.49, costos: 238.17, target: 300 },
+            { mes: 'Jun', real: 477.41, real2025: 569.28, costos: 281.32, target: 300 },
+            { mes: 'Jul', real: 511.09, real2025: 274.58, costos: 266.36, target: 350 },
+            { mes: 'Ago', real: 484.99, real2025: 303.54, costos: 266.72, target: 400 },
+            { mes: 'Sep', real: 498.71, real2025: 386.67, costos: 268.74, target: 450 },
+            { mes: 'Oct', real: 486.19, real2025: 527.57, costos: 269.28, target: 450 },
+            { mes: 'Nov', real: 498.69, real2025: 648.37, costos: 271.39, target: 500 },
+            { mes: 'Dic', real: 534.52, real2025: 615.08, costos: 302.28, target: 550 },
         ];
 
         const quarterlyData = [
-            { q: 'Q1', ponderado: 1055.17, target: 650, achievement: 162 },
-            { q: 'Q2', ponderado: 1583.94, target: 850, achievement: 186 },
-            { q: 'Q3', ponderado: 1426.29, target: 1200, achievement: 119 },
-            { q: 'Q4', ponderado: 1403.90, target: 1500, achievement: 94 },
+            { q: 'Q1', ponderado: 992.67, target: 650, achievement: 153 },
+            { q: 'Q2', ponderado: 1522.54, target: 850, achievement: 179 },
+            { q: 'Q3', ponderado: 1494.79, target: 1200, achievement: 125 },
+            { q: 'Q4', ponderado: 1519.40, target: 1500, achievement: 101 },
         ];
 
         const funnelData = [
             { stage: 'Won', value: 3214.39 },
-            { stage: 'Upside', value: 1116.10 },
-            { stage: 'Forecast', value: 165.58 },
+            { stage: 'Upside', value: 1206.10 },
+            { stage: 'Forecast', value: 265.58 },
             { stage: 'Pipeline', value: 195.32 },
-            { stage: 'Commit', value: 300.00 },
+            { stage: 'Commit', value: 180.00 },
             { stage: 'Lead', value: 30.00 },
         ];
 
@@ -585,9 +585,9 @@
         };
 
         const ResumenEjecutivo = () => {
-            const ytdReal = 1055.17;
+            const ytdReal = 992.67;
             const targetAnual = 4200;
-            const avancePercent = Math.round((5469.30 / 4200) * 100);
+            const avancePercent = Math.round((5529.40 / 4200) * 100);
             const cuentasCount = cuentasActivas.length;
             const pipelineTotal = pipelineQ2.reduce((sum, p) => sum + p.ticketTotal, 0);
 
@@ -683,10 +683,10 @@
 
         const RevenueQuarters = () => {
             const q2Breakdown = [
-                { label: 'Won', value: 1583.94 },
-                { label: 'Upside', value: 1116.10 },
-                { label: 'Forecast', value: 165.58 },
-                { label: 'Commit', value: 300.00 },
+                { label: 'Won', value: 1522.54 },
+                { label: 'Upside', value: 1206.10 },
+                { label: 'Forecast', value: 265.58 },
+                { label: 'Commit', value: 180.00 },
             ];
 
             const colors = ['#E94560', '#FF6B7A', '#FFB3BE', '#FFD9E0'];
@@ -1247,7 +1247,7 @@
                             </div>
                         </div>
                         <div className="header-right">
-                            <span>Última actualización: 14 mayo 2026</span>
+                            <span>Última actualización: 18 mayo 2026</span>
                         </div>
                     </header>
 
@@ -1268,7 +1268,7 @@
                     </div>
 
                     <footer className="footer">
-                        Fuente: Notion CRM Taquion — Forecast + Funnel/Oportunidades | Actualizado: 14 de Mayo 2026
+                        Fuente: Notion CRM Taquion — Forecast + Funnel/Oportunidades | Actualizado: 18 de Mayo 2026
                     </footer>
                 </div>
             );
