@@ -1,7 +1,7 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { COLORS } from "../data/constants.js";
 import { useData } from "../data/DataProvider.jsx";
-import { COMERCIALES, MODELO_COMERCIAL, BO_VERTICALES } from "../data/commercials.js";
+import { COMERCIALES, BO_PHANTOM, MODELO_COMERCIAL, BO_VERTICALES } from "../data/commercials.js";
 import { fmtM } from "../utils/formatters.js";
 import { KPICard, ProgressBar, SectionTitle, CustomTooltip } from "../components/ui/index.js";
 
@@ -66,6 +66,24 @@ export default function TabEquipo() {
       winRate,
       targetToDate,
       pctTarget: targetToDate > 0 ? (wonOrig / targetToDate * 100) : 0,
+      pipelineCount: pipe.count,
+      pipelineValue: pipe.value,
+    };
+  });
+
+  // BO/Phantom performance data
+  const boData = BO_PHANTOM.map(c => {
+    const nk = norm(c.nombre);
+    // For BOs: revenue where they are BO or Originador
+    const wonBO = WON_2026.filter(w => norm(w.bo) === nk).reduce((s, w) => s + (w.q1 || 0), 0);
+    const wonOrig = wonByOriginador[nk] || 0;
+    const wonCerr = wonByCerrador[nk] || 0;
+    const pipe = pipelineByPerson[nk] || { count: 0, value: 0 };
+    return {
+      ...c,
+      wonBO,
+      wonOrig,
+      wonCerr,
       pipelineCount: pipe.count,
       pipelineValue: pipe.value,
     };
@@ -172,27 +190,58 @@ export default function TabEquipo() {
         </div>
       </div>
 
-      <SectionTitle>Cobertura de Verticales — Business Owners</SectionTitle>
+      <SectionTitle>Business Owners & Phantom GCs — Performance</SectionTitle>
       <div style={{ background: "white", borderRadius: 12, padding: 24, marginBottom: 24 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
-          {Object.entries(BO_VERTICALES).map(([name, info]) => (
-            <div key={name} style={{
-              padding: 14, borderRadius: 8,
-              border: "1px solid " + (info.status === "activo" ? COLORS.green : COLORS.warning) + "40",
-              background: (info.status === "activo" ? COLORS.green : COLORS.warning) + "05",
-            }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.dark }}>{name}</div>
-              <div style={{ fontSize: 12, color: info.status === "activo" ? COLORS.green : COLORS.warning, fontWeight: 600, marginTop: 2 }}>{info.vertical}</div>
-              <div style={{ fontSize: 10, color: COLORS.gray, marginTop: 4 }}>
-                <span style={{
-                  padding: "1px 6px", borderRadius: 3,
-                  background: info.status === "activo" ? COLORS.green + "15" : COLORS.warning + "15",
-                  color: info.status === "activo" ? COLORS.green : COLORS.warning,
-                  fontWeight: 600,
-                }}>{info.status}</span>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
+          {boData.map(b => {
+            const verticalInfo = BO_VERTICALES[b.nombre] || {};
+            const roleColor = b.modelRole === "GC" ? COLORS.blue : COLORS.purple;
+            return (
+              <div key={b.nombre} style={{
+                padding: 20, borderRadius: 12,
+                borderLeft: "4px solid " + roleColor,
+                background: "white",
+                border: "1px solid " + COLORS.lightGray,
+                borderLeftColor: roleColor,
+                borderLeftWidth: 4,
+              }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: 8 }}>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: COLORS.dark }}>{b.nombre}</div>
+                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      <span style={{ fontSize: 11, color: COLORS.gray }}>{b.role}</span>
+                      <span style={{ fontSize: 10, padding: "1px 6px", borderRadius: 3, background: roleColor + "15", color: roleColor, fontWeight: 600 }}>
+                        {b.modelRole}
+                      </span>
+                      {verticalInfo.vertical && (
+                        <span style={{ fontSize: 10, padding: "1px 6px", borderRadius: 3, background: COLORS.teal + "15", color: COLORS.teal, fontWeight: 600 }}>
+                          {verticalInfo.vertical}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: 11, color: COLORS.gray }}>Comisión</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: roleColor }}>{b.comisionPct}%</div>
+                  </div>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 12 }}>
+                  <div style={{ textAlign: "center", padding: 8, background: COLORS.green + "08", borderRadius: 6 }}>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: b.wonBO > 0 ? COLORS.green : COLORS.gray }}>{fmtM(b.wonBO)}</div>
+                    <div style={{ fontSize: 10, color: COLORS.gray }}>Won como BO</div>
+                  </div>
+                  <div style={{ textAlign: "center", padding: 8, background: COLORS.accent + "08", borderRadius: 6 }}>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: b.wonOrig > 0 ? COLORS.accent : COLORS.gray }}>{fmtM(b.wonOrig)}</div>
+                    <div style={{ fontSize: 10, color: COLORS.gray }}>Won Originador</div>
+                  </div>
+                  <div style={{ textAlign: "center", padding: 8, background: COLORS.blue + "08", borderRadius: 6 }}>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: b.pipelineValue > 0 ? COLORS.blue : COLORS.gray }}>{fmtM(b.pipelineValue)}</div>
+                    <div style={{ fontSize: 10, color: COLORS.gray }}>{b.pipelineCount} en pipeline</div>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
