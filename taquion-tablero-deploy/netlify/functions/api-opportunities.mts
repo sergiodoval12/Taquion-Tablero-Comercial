@@ -19,6 +19,32 @@ export default async (req: Request, context: Context) => {
   try {
     const url = new URL(req.url);
 
+    // Debug 4: List ALL Notion users (workspace members + guests) with IDs and names
+    if (url.searchParams.get("debug") === "4") {
+      const apiKey = Netlify.env.get("NOTION_API_KEY");
+      let allUsers: any[] = [];
+      let nextCursor: string | undefined;
+      let hasMore = true;
+      while (hasMore) {
+        const params = new URLSearchParams({ page_size: "100" });
+        if (nextCursor) params.set("start_cursor", nextCursor);
+        const res = await fetch(`https://api.notion.com/v1/users?${params}`, {
+          headers: { "Authorization": `Bearer ${apiKey}`, "Notion-Version": NOTION_VERSION },
+        });
+        const data = await res.json();
+        allUsers = allUsers.concat(data.results || []);
+        hasMore = data.has_more;
+        nextCursor = data.next_cursor;
+      }
+      const users = allUsers.map((u: any) => ({
+        id: u.id,
+        name: u.name,
+        type: u.type,
+        email: u.person?.email || u.bot?.owner?.user?.name || null,
+      }));
+      return jsonResponse({ total: users.length, users });
+    }
+
     // Debug 1: Return Funnel database schema (instant, no records)
     if (url.searchParams.get("debug") === "1") {
       const apiKey = Netlify.env.get("NOTION_API_KEY");
