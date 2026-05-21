@@ -4,7 +4,7 @@
 // - Sergio Doval = CEO
 // - Sol Rios Brinatti = COO
 // - Diego Lajst = COO
-// - Ciro Garcia Resta = Business Owner
+// - Ciro García Resta = Business Owner
 // Target mensual GC: $50M (según modelo comercial Taquion)
 
 // ─── EQUIPO COMERCIAL PRINCIPAL ──────────────────────────────
@@ -14,8 +14,8 @@ export const COMERCIALES = [
   { nombre: "Diego Lajst", targetMensual: 50000000, role: "COO", modelRole: "BO", fijoMensual: 0, verticales: ["Advisory Board"] },
   { nombre: "Diego Kupferberg", targetMensual: 50000000, role: "Gerente Comercial", modelRole: "GC", fijoMensual: 3500000, verticales: [] },
   { nombre: "Sol Rios Brinatti", targetMensual: 50000000, role: "COO", modelRole: "BO", fijoMensual: 0, verticales: [] },
-  { nombre: "Martin Villanueva", targetMensual: 50000000, role: "Comercial", modelRole: "GC", fijoMensual: 0, verticales: [] },
-  { nombre: "Julian Cordova", targetMensual: 50000000, role: "Comercial", modelRole: "GC", fijoMensual: 0, verticales: [] },
+  { nombre: "Martín Villanueva", targetMensual: 50000000, role: "Comercial", modelRole: "GC", fijoMensual: 0, verticales: [] },
+  { nombre: "Julian Cordoba Pivotto", targetMensual: 50000000, role: "Comercial", modelRole: "GC", fijoMensual: 0, verticales: [] },
   { nombre: "Agustina Ferreyra", targetMensual: 50000000, role: "Comercial", modelRole: "GC", fijoMensual: 0, verticales: [] },
 ];
 
@@ -24,7 +24,7 @@ export const COMERCIALES = [
 // Phantom GC cobra comisión por deal sin ser full-time
 export const BO_PHANTOM = [
   { nombre: "Pablo Juanes Roig", role: "Business Owner", modelRole: "BO", vertical: "Banca & Fintech", comisionPct: 2.5, status: "activo" },
-  { nombre: "Ciro Garcia Resta", role: "Business Owner", modelRole: "BO", vertical: "Real Estate / Urbanismo", comisionPct: 2.5, status: "activo" },
+  { nombre: "Ciro García Resta", role: "Business Owner", modelRole: "BO", vertical: "Real Estate / Urbanismo", comisionPct: 2.5, status: "activo" },
   { nombre: "Mariana Gallo Sacerdote", role: "Business Owner", modelRole: "BO", vertical: "Consumo Masivo", comisionPct: 2.5, status: "activo" },
   { nombre: "Matías Fermín", role: "Phantom GC", modelRole: "GC", vertical: "Banca & Fintech", comisionPct: 7.5, status: "activo" },
   { nombre: "Eugenio Gigena", role: "Business Owner", modelRole: "BO", vertical: "por asignar", comisionPct: 2.5, status: "activo" },
@@ -36,7 +36,7 @@ export const TODOS_COMERCIALES = [...COMERCIALES, ...BO_PHANTOM];
 // Asignación de Business Owners a verticales (actualizado 27/04/2026)
 export const BO_VERTICALES = {
   "Pablo Juanes Roig": { vertical: "Banca & Fintech", status: "activo" },
-  "Ciro Garcia Resta": { vertical: "Real Estate / Urbanismo", status: "activo" },
+  "Ciro García Resta": { vertical: "Real Estate / Urbanismo", status: "activo" },
   "Mariana Gallo Sacerdote": { vertical: "Consumo Masivo", status: "activo" },
   "Matías Fermín": { vertical: "Banca & Fintech (Phantom GC)", status: "activo" },
   "Eugenio Gigena": { vertical: "por asignar", status: "activo" },

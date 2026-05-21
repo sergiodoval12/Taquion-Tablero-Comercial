@@ -5,31 +5,35 @@ import { COMERCIALES, MODELO_COMERCIAL, BO_VERTICALES } from "../data/commercial
 import { fmtM } from "../utils/formatters.js";
 import { KPICard, ProgressBar, SectionTitle, CustomTooltip } from "../components/ui/index.js";
 
+// Normalize name: strip accents, lowercase — prevents mismatch between Notion and local data
+const norm = (s) => (s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
+
 export default function TabEquipo() {
   const { opportunities: OPPORTUNITIES, won2026: WON_2026, lostCount, lostByCerrador, avgVelocity, accounts } = useData();
   // Revenue originado (rol principal para la atribución general)
   const wonByOriginador = {};
   WON_2026.forEach(w => {
-    wonByOriginador[w.originador] = (wonByOriginador[w.originador] || 0) + (w.q1 || 0);
+    wonByOriginador[norm(w.originador)] = (wonByOriginador[norm(w.originador)] || 0) + (w.q1 || 0);
   });
   const wonByCerrador = {};
   WON_2026.forEach(w => {
-    wonByCerrador[w.cerrador] = (wonByCerrador[w.cerrador] || 0) + (w.q1 || 0);
+    wonByCerrador[norm(w.cerrador)] = (wonByCerrador[norm(w.cerrador)] || 0) + (w.q1 || 0);
   });
   const wonCountByCerrador = {};
   WON_2026.forEach(w => {
-    wonCountByCerrador[w.cerrador] = (wonCountByCerrador[w.cerrador] || 0) + 1;
+    wonCountByCerrador[norm(w.cerrador)] = (wonCountByCerrador[norm(w.cerrador)] || 0) + 1;
   });
 
   const pipelineByPerson = {};
   OPPORTUNITIES.forEach(o => {
     [o.cerrador, o.originador, o.bo].forEach(name => {
       if (name && name !== "Sin asignar") {
-        if (!pipelineByPerson[name]) pipelineByPerson[name] = { count: 0, value: 0, seen: new Set() };
-        if (!pipelineByPerson[name].seen.has(o.nombre)) {
-          pipelineByPerson[name].count++;
-          pipelineByPerson[name].value += o.total;
-          pipelineByPerson[name].seen.add(o.nombre);
+        const k = norm(name);
+        if (!pipelineByPerson[k]) pipelineByPerson[k] = { count: 0, value: 0, seen: new Set() };
+        if (!pipelineByPerson[k].seen.has(o.nombre)) {
+          pipelineByPerson[k].count++;
+          pipelineByPerson[k].value += o.total;
+          pipelineByPerson[k].seen.add(o.nombre);
         }
       }
     });
@@ -40,14 +44,19 @@ export default function TabEquipo() {
   const totalWinRate = (totalWonCount + lostCount) > 0 ? (totalWonCount / (totalWonCount + lostCount) * 100) : 0;
 
   const monthsElapsed = 4; // Updated to April 2026
+  // Also normalize lostByCerrador keys for matching
+  const lostByNorm = {};
+  Object.entries(lostByCerrador).forEach(([k, v]) => { lostByNorm[norm(k)] = (lostByNorm[norm(k)] || 0) + v; });
+
   const teamData = COMERCIALES.map(c => {
-    const wonOrig = wonByOriginador[c.nombre] || 0;
-    const wonCerr = wonByCerrador[c.nombre] || 0;
-    const wonCount = wonCountByCerrador[c.nombre] || 0;
-    const lostPersonCount = lostByCerrador[c.nombre] || 0;
+    const nk = norm(c.nombre);
+    const wonOrig = wonByOriginador[nk] || 0;
+    const wonCerr = wonByCerrador[nk] || 0;
+    const wonCount = wonCountByCerrador[nk] || 0;
+    const lostPersonCount = lostByNorm[nk] || 0;
     const winRate = (wonCount + lostPersonCount) > 0 ? (wonCount / (wonCount + lostPersonCount) * 100) : null;
     const targetToDate = c.targetMensual * monthsElapsed;
-    const pipe = pipelineByPerson[c.nombre] || { count: 0, value: 0 };
+    const pipe = pipelineByPerson[nk] || { count: 0, value: 0 };
     return {
       ...c,
       won: wonOrig,

@@ -22,6 +22,10 @@ function getRoleColor(m) {
   return COLORS.gray;
 }
 
+// Normalize name: strip accents, lowercase — prevents mismatch between Notion and local data
+const norm = (s) => (s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
+const eq = (a, b) => norm(a) === norm(b);
+
 export default function TabSeguimiento() {
   const { opportunities: OPPORTUNITIES, won2026: WON_2026, accounts: CUENTAS_ACTIVAS } = useData();
   const [selected, setSelected] = useState(COMERCIALES[0].nombre);
@@ -30,9 +34,9 @@ export default function TabSeguimiento() {
 
   const stats = useMemo(() => {
     // Won deals donde participó en algún rol
-    const wonAsCerrador = WON_2026.filter(w => w.cerrador === selected);
-    const wonAsOriginador = WON_2026.filter(w => w.originador === selected);
-    const wonAsBO = WON_2026.filter(w => w.bo === selected);
+    const wonAsCerrador = WON_2026.filter(w => eq(w.cerrador, selected));
+    const wonAsOriginador = WON_2026.filter(w => eq(w.originador, selected));
+    const wonAsBO = WON_2026.filter(w => eq(w.bo, selected));
 
     // Use Q1 monthly revenue (not deal total) — matches company $533M Q1
     const revenueCerrador = wonAsCerrador.reduce((s, w) => s + (w.q1 || 0), 0);
@@ -40,19 +44,19 @@ export default function TabSeguimiento() {
     const revenueBO = wonAsBO.reduce((s, w) => s + (w.q1 || 0), 0);
 
     // Pipeline opportunities donde participa
-    const pipelineAsCerrador = OPPORTUNITIES.filter(o => o.cerrador === selected);
-    const pipelineAsOriginador = OPPORTUNITIES.filter(o => o.originador === selected);
-    const pipelineAsBO = OPPORTUNITIES.filter(o => o.bo === selected);
+    const pipelineAsCerrador = OPPORTUNITIES.filter(o => eq(o.cerrador, selected));
+    const pipelineAsOriginador = OPPORTUNITIES.filter(o => eq(o.originador, selected));
+    const pipelineAsBO = OPPORTUNITIES.filter(o => eq(o.bo, selected));
 
     // Unión de oportunidades donde participa
     const pipelineAll = OPPORTUNITIES.filter(o =>
-      o.cerrador === selected || o.originador === selected || o.bo === selected
+      eq(o.cerrador, selected) || eq(o.originador, selected) || eq(o.bo, selected)
     );
 
     const pipelineValue = pipelineAll.reduce((s, o) => s + o.total, 0);
 
     // Cuentas activas donde es AM
-    const cuentasAM = CUENTAS_ACTIVAS.filter(c => c.am === selected);
+    const cuentasAM = CUENTAS_ACTIVAS.filter(c => eq(c.am, selected));
 
     // Won by industry
     const wonByIndustry = {};
@@ -97,7 +101,7 @@ export default function TabSeguimiento() {
   // Fee como porcentaje según rol
   let feeLabel = "";
   let feePct = 0;
-  const isPhantom = BO_PHANTOM.some(b => b.nombre === selected);
+  const isPhantom = BO_PHANTOM.some(b => eq(b.nombre, selected));
   if (person.modelRole === "CEO") {
     feeLabel = "17.5% (BO origina + cierra)";
     feePct = 17.5;
