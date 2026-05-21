@@ -97,7 +97,7 @@ export default function TabResumen() {
             </BarChart>
           </ResponsiveContainer>
           <div style={{ fontSize: 11, color: COLORS.gray, marginTop: 4 }}>
-            * Solo revenue de deals Won (Monto Mensual) | Compañía: Taquion | Moneda: ARS
+            * Solo revenue de deals Won (Monto Mensual) | Grupo Taquion (excl. España)
             {revenue2027.length > 0 && " | Vista 18 meses"}
           </div>
         </div>

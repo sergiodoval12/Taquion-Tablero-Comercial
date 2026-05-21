@@ -152,15 +152,13 @@ export default async (req: Request, context: Context) => {
       "7. Julio", "8. Agosto", "9. Septiembre", "10. Octubre", "11. Noviembre", "12. Diciembre",
     ];
 
-    // Filters: include Taquion + null Compañía (exclude only Lumos/Taquion España)
-    // and ARS + null Moneda (exclude only USD/EUR/BTC)
+    // Filters: include all companies (Taquion + Lumos + null), exclude only non-ARS currencies
     function monthRealFilter(month: string, year = "2026") {
       return {
         and: [
           { property: "Año Facturación", select: { equals: year } },
           { property: "Tipo", select: { equals: "Real" } },
           { property: "Mes Facturación", select: { equals: month } },
-          { property: "Compañía", select: { does_not_equal: "Lumos" } },
           { property: "Compañía", select: { does_not_equal: "Taquion España" } },
           { property: "Moneda", select: { does_not_equal: "USD" } },
           { property: "Moneda", select: { does_not_equal: "EUR" } },
@@ -180,7 +178,6 @@ export default async (req: Request, context: Context) => {
       and: [
         { property: "Año Facturación", select: { equals: "2025" } },
         { property: "Tipo", select: { equals: "Real" } },
-        { property: "Compañía", select: { does_not_equal: "Lumos" } },
         { property: "Compañía", select: { does_not_equal: "Taquion España" } },
         { property: "Moneda", select: { does_not_equal: "USD" } },
         { property: "Moneda", select: { does_not_equal: "EUR" } },
