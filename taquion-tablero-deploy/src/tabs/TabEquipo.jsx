@@ -6,7 +6,7 @@ import { fmtM } from "../utils/formatters.js";
 import { KPICard, ProgressBar, SectionTitle, CustomTooltip } from "../components/ui/index.js";
 
 // Normalize name: strip accents, lowercase — prevents mismatch between Notion and local data
-const norm = (s) => (s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
+const norm = (s) => (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 
 export default function TabEquipo() {
   const { opportunities: OPPORTUNITIES, won2026: WON_2026, lostCount, lostByCerrador, avgVelocity, accounts } = useData();

@@ -23,7 +23,7 @@ function getRoleColor(m) {
 }
 
 // Normalize name: strip accents, lowercase — prevents mismatch between Notion and local data
-const norm = (s) => (s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
+const norm = (s) => (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 const eq = (a, b) => norm(a) === norm(b);
 
 export default function TabSeguimiento() {
@@ -91,7 +91,7 @@ export default function TabSeguimiento() {
       cuentasAM,
       wonByIndustry, pipelineByStage, cumplimientoMensual,
     };
-  }, [selected]);
+  }, [selected, OPPORTUNITIES, WON_2026, CUENTAS_ACTIVAS]);
 
   // Determinar el "revenue principal" según el rol
   const revenueRelevante = person.modelRole === "GC" ? stats.revenueCerrador : stats.revenueOriginador;
@@ -140,13 +140,13 @@ export default function TabSeguimiento() {
       items.push({ concepto: "Ownership vertical (2.5%)", base: ownershipRev, pct: 2.5, monto: ownershipFee });
 
       // Deals donde originó Y cerró
-      const originaYCierra = WON_2026.filter(w => w.originador === selected && w.cerrador === selected);
+      const originaYCierra = WON_2026.filter(w => eq(w.originador, selected) && eq(w.cerrador, selected));
       const revOyC = originaYCierra.reduce((s, w) => s + (w.q1 || 0), 0);
       const feeOyC = revOyC * 0.15;
       items.push({ concepto: "Performance origina+cierra (15%)", base: revOyC, pct: 15, monto: feeOyC });
 
       // Deals donde originó pero otro cerró
-      const originaSolo = WON_2026.filter(w => w.originador === selected && w.cerrador !== selected);
+      const originaSolo = WON_2026.filter(w => eq(w.originador, selected) && !eq(w.cerrador, selected));
       const revOS = originaSolo.reduce((s, w) => s + (w.q1 || 0), 0);
       const feeOS = revOS * 0.075;
       items.push({ concepto: "Origen sin cierre (7.5%)", base: revOS, pct: 7.5, monto: feeOS });
@@ -177,7 +177,7 @@ export default function TabSeguimiento() {
           totalComision = fijoTotal;
         }
         // New business originado por GC
-        const originadoPorGC = WON_2026.filter(w => w.originador === selected && w.cerrador === selected);
+        const originadoPorGC = WON_2026.filter(w => eq(w.originador, selected) && eq(w.cerrador, selected));
         const revNB = originadoPorGC.reduce((s, w) => s + (w.q1 || 0), 0);
         if (revNB > 0) {
           const feeNB = revNB * 0.075;
@@ -204,7 +204,7 @@ export default function TabSeguimiento() {
     }
 
     return { items, totalComision };
-  }, [selected, stats, person, isPhantom]);
+  }, [selected, stats, person, isPhantom, WON_2026]);
 
   const sortedOpps = [...stats.pipelineAll].sort((a, b) => (STAGE_ORDER[a.stage] || 99) - (STAGE_ORDER[b.stage] || 99));
 
@@ -467,7 +467,7 @@ export default function TabSeguimiento() {
               {(() => {
                 // Mostrar todos los deals donde esta persona tiene algún rol
                 const allDeals = WON_2026.filter(w =>
-                  w.cerrador === selected || w.originador === selected || w.bo === selected
+                  eq(w.cerrador, selected) || eq(w.originador, selected) || eq(w.bo, selected)
                 ).sort((a, b) => b.total - a.total);
                 return allDeals.map((w, i) => (
                   <tr key={i} style={{ borderBottom: "1px solid " + COLORS.lightGray }}>
@@ -475,21 +475,21 @@ export default function TabSeguimiento() {
                     <td style={{ padding: 8, textAlign: "right", fontWeight: 600, color: (w.q1 || w.total) > 0 ? COLORS.green : COLORS.gray }}>{(w.q1 || w.total) > 0 ? fmtM(w.q1 || w.total) : "—"}</td>
                     <td style={{ padding: 8, fontSize: 11 }}>{w.industria}</td>
                     <td style={{ padding: 8, textAlign: "center" }}>
-                      {w.originador === selected ? (
+                      {eq(w.originador, selected) ? (
                         <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 3, background: COLORS.green + "15", color: COLORS.green, fontWeight: 600 }}>Originador</span>
                       ) : (
                         <span style={{ fontSize: 10, color: COLORS.gray }}>{w.originador.split(" ")[0]}</span>
                       )}
                     </td>
                     <td style={{ padding: 8, textAlign: "center" }}>
-                      {w.cerrador === selected ? (
+                      {eq(w.cerrador, selected) ? (
                         <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 3, background: COLORS.blue + "15", color: COLORS.blue, fontWeight: 600 }}>Cerrador</span>
                       ) : (
                         <span style={{ fontSize: 10, color: COLORS.gray }}>{w.cerrador.split(" ")[0]}</span>
                       )}
                     </td>
                     <td style={{ padding: 8, textAlign: "center" }}>
-                      {w.bo === selected ? (
+                      {eq(w.bo, selected) ? (
                         <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 3, background: COLORS.purple + "15", color: COLORS.purple, fontWeight: 600 }}>BO</span>
                       ) : (
                         <span style={{ fontSize: 10, color: COLORS.gray }}>{w.bo.split(" ")[0]}</span>
@@ -534,9 +534,9 @@ export default function TabSeguimiento() {
             <tbody>
               {sortedOpps.map((o, i) => {
                 const roles = [];
-                if (o.originador === selected) roles.push({ label: "Orig", color: COLORS.green });
-                if (o.cerrador === selected) roles.push({ label: "Cerr", color: COLORS.blue });
-                if (o.bo === selected) roles.push({ label: "BO", color: COLORS.purple });
+                if (eq(o.originador, selected)) roles.push({ label: "Orig", color: COLORS.green });
+                if (eq(o.cerrador, selected)) roles.push({ label: "Cerr", color: COLORS.blue });
+                if (eq(o.bo, selected)) roles.push({ label: "BO", color: COLORS.purple });
                 return (
                   <tr key={i} style={{ borderBottom: "1px solid " + COLORS.lightGray }}>
                     <td style={{ padding: 8, fontWeight: 500 }}>{o.nombre}</td>
