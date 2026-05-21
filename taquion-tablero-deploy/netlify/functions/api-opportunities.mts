@@ -60,6 +60,51 @@ export default async (req: Request, context: Context) => {
       return jsonResponse({ samples, total: data.results?.length });
     }
 
+    // Debug 3: Return processed won2026 + first 5 pipeline opps (what the frontend actually receives)
+    if (url.searchParams.get("debug") === "3") {
+      const wonFilter = {
+        and: [
+          { property: "Estado Oportunidad", select: { equals: "Won" } },
+          { property: "WON DATE", date: { on_or_after: "2026-01-01" } }
+        ]
+      };
+      const pipeFilter = {
+        or: ACTIVE_STAGES.map(stage => ({
+          property: "Estado Oportunidad",
+          select: { equals: stage }
+        }))
+      };
+      const [wonPages, pipePages] = await Promise.all([
+        notionQueryAll(DB_IDS.FUNNEL, wonFilter),
+        notionQueryAll(DB_IDS.FUNNEL, pipeFilter),
+      ]);
+      const wonSample = wonPages.slice(0, 5).map((page: any) => ({
+        nombre: getProp(page, "Nombre Oportunidad"),
+        cerrador: extractPerson(page, "Cerrador de Oportunidad"),
+        originador: extractPerson(page, "Orginador del Lead"),
+        bo: extractPerson(page, "Business Owner"),
+        total: getProp(page, "$ Total Estimado (Sin IVA)") || 0,
+        q1: (getProp(page, "Enero") || 0) + (getProp(page, "Febrero") || 0) + (getProp(page, "Marzo") || 0),
+        enero: getProp(page, "Enero"),
+        febrero: getProp(page, "Febrero"),
+        marzo: getProp(page, "Marzo"),
+      }));
+      const pipeSample = pipePages.slice(0, 5).map((page: any) => ({
+        nombre: getProp(page, "Nombre Oportunidad"),
+        cerrador: extractPerson(page, "Cerrador de Oportunidad"),
+        originador: extractPerson(page, "Orginador del Lead"),
+        bo: extractPerson(page, "Business Owner"),
+        total: getProp(page, "$ Total Estimado (Sin IVA)") || 0,
+        stage: getProp(page, "Estado Oportunidad"),
+      }));
+      return jsonResponse({
+        wonTotal: wonPages.length,
+        pipeTotal: pipePages.length,
+        wonSample,
+        pipeSample,
+      });
+    }
+
     // ── Active pipeline opportunities ──
     const filter = {
       or: ACTIVE_STAGES.map(stage => ({

@@ -7,7 +7,7 @@ import Footer from "./components/Footer.jsx";
 import { TabResumen, TabRevenue, TabSeguimiento, TabCuentas, TabPipeline, TabEquipo, TabAlertas, TabForecastCFO } from "./tabs/index.js";
 
 function DataStatusBar() {
-  const { loading, error, source, updatedAt, refresh } = useData();
+  const { loading, error, source, updatedAt, refresh, opportunities, won2026, accounts } = useData();
 
   return (
     <div className="status-bar" style={{
@@ -38,6 +38,12 @@ function DataStatusBar() {
         {updatedAt && !loading && (
           <span style={{ marginLeft: 8, opacity: 0.7 }}>
             Actualizado: {new Date(updatedAt).toLocaleString("es-AR", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "short" })}
+          </span>
+        )}
+        {!loading && (
+          <span style={{ marginLeft: 8, opacity: 0.6, fontFamily: "monospace" }}>
+            [{source}] opps:{opportunities?.length || 0} won:{won2026?.length || 0} ctas:{accounts?.length || 0}
+            {won2026?.length > 0 && (" | cerr0:" + won2026[0].cerrador + " bo0:" + won2026[0].bo)}
           </span>
         )}
       </div>
