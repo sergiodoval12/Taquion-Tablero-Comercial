@@ -89,14 +89,26 @@ export default async (req: Request, context: Context) => {
         febrero: getProp(page, "Febrero"),
         marzo: getProp(page, "Marzo"),
       }));
-      const pipeSample = pipePages.slice(0, 5).map((page: any) => ({
-        nombre: getProp(page, "Nombre Oportunidad"),
-        cerrador: extractPerson(page, "Cerrador de Oportunidad"),
-        originador: extractPerson(page, "Orginador del Lead"),
-        bo: extractPerson(page, "Business Owner"),
-        total: getProp(page, "$ Total Estimado (Sin IVA)") || 0,
-        stage: getProp(page, "Estado Oportunidad"),
-      }));
+      const MESES_DBG = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+      const pipeSample = pipePages.slice(0, 5).map((page: any) => {
+        const monthValues: Record<string, any> = {};
+        let monthTotal = 0;
+        for (const m of MESES_DBG) {
+          const v = getProp(page, m);
+          monthValues[m] = v;
+          monthTotal += v || 0;
+        }
+        return {
+          nombre: getProp(page, "Nombre Oportunidad"),
+          cerrador: extractPerson(page, "Cerrador de Oportunidad"),
+          originador: extractPerson(page, "Orginador del Lead"),
+          bo: extractPerson(page, "Business Owner"),
+          totalEstimado: getProp(page, "$ Total Estimado (Sin IVA)"),
+          monthTotal,
+          months: monthValues,
+          stage: getProp(page, "Estado Oportunidad"),
+        };
+      });
       return jsonResponse({
         wonTotal: wonPages.length,
         pipeTotal: pipePages.length,
@@ -141,10 +153,21 @@ export default async (req: Request, context: Context) => {
         if (staleDays < 0) staleDays = 0;
       }
 
+      // Primary: use $ Total Estimado. Fallback: sum of monthly formula fields from Forecast
+      const MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+      const totalEstimado = getProp(page, "$ Total Estimado (Sin IVA)") || 0;
+      let totalFromMonths = 0;
+      if (!totalEstimado) {
+        for (const mes of MESES) {
+          totalFromMonths += getProp(page, mes) || 0;
+        }
+      }
+      const total = totalEstimado || totalFromMonths;
+
       return {
         nombre: getProp(page, "Nombre Oportunidad") || "Sin nombre",
         stage,
-        total: getProp(page, "$ Total Estimado (Sin IVA)") || 0,
+        total,
         industria: industrias.length > 0 ? industrias[0] : "Sin clasificar",
         upselling: getProp(page, "Upselling") === true,
         cerrador: extractPerson(page, "Cerrador de Oportunidad"),
@@ -188,12 +211,22 @@ export default async (req: Request, context: Context) => {
       const feb = getProp(page, "Febrero") || 0;
       const mar = getProp(page, "Marzo") || 0;
       const abr = getProp(page, "Abril") || 0;
+      const may = getProp(page, "Mayo") || 0;
+      const jun = getProp(page, "Junio") || 0;
+      const jul = getProp(page, "Julio") || 0;
+      const ago = getProp(page, "Agosto") || 0;
+      const sep = getProp(page, "Septiembre") || 0;
+      const oct = getProp(page, "Octubre") || 0;
+      const nov = getProp(page, "Noviembre") || 0;
+      const dic = getProp(page, "Diciembre") || 0;
       const q1 = ene + feb + mar;
       const ytd = q1 + abr;
+      const totalFromMonths = ene + feb + mar + abr + may + jun + jul + ago + sep + oct + nov + dic;
+      const totalEstimado = getProp(page, "$ Total Estimado (Sin IVA)") || 0;
 
       return {
         nombre: getProp(page, "Nombre Oportunidad") || "Sin nombre",
-        total: getProp(page, "$ Total Estimado (Sin IVA)") || 0,
+        total: totalEstimado || totalFromMonths,
         q1,
         ytd,
         cerrador: extractPerson(page, "Cerrador de Oportunidad"),
