@@ -165,11 +165,11 @@ export default async (req: Request, context: Context) => {
       };
     }
 
+    // Targets don't have Compañía set in Notion — don't filter by it
     const filterTarget26 = {
       and: [
         { property: "Año Facturación", select: { equals: "2026" } },
         { property: "Tipo", select: { equals: "Target" } },
-        { property: "Compañía", select: { equals: "Taquion" } },
       ],
     };
     const filter2025Real = {
@@ -183,11 +183,11 @@ export default async (req: Request, context: Context) => {
 
     // 2027 filters (Q1-Q2 only for 18-month view)
     const MONTHS_2027 = ["1. Enero", "2. Febrero", "3. Marzo", "4. Abril", "5. Mayo", "6. Junio"];
+    // Targets don't have Compañía set in Notion — don't filter by it
     const filterTarget27 = {
       and: [
         { property: "Año Facturación", select: { equals: "2027" } },
         { property: "Tipo", select: { equals: "Target" } },
-        { property: "Compañía", select: { equals: "Taquion" } },
       ],
     };
 
